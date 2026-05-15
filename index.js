@@ -53,6 +53,22 @@ const commands = [
             { name: 'role', type: 9, description: 'Role yang akan dihapus', required: true },
         ],
     },
+        {
+        name: 'createrole',
+        description: 'Membuat role baru di server dengan kustomisasi warna',
+        options: [
+            { name: 'name', type: 3, description: 'Nama role baru yang ingin dibuat', required: true },
+            { name: 'color', type: 3, description: 'Warna role dalam kode Hex (Contoh: #ff0000 untuk Merah)', required: false }
+        ],
+    },
+    {
+        name: 'deleterole',
+        description: 'Menghapus sebuah role dari server',
+        options: [
+            { name: 'role', type: 9, description: 'Role yang ingin dihapus', required: true }
+        ],
+    },
+
     {
         name: 'addchannel',
         description: 'Membuat kanal baru dengan kustomisasi kategori dan izin role',
