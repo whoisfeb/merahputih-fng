@@ -31,3 +31,4 @@ jobs:
         run: npm start 
         env:
           DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
+          CLIENT_ID: ${{ secrets.CLIENT_ID }}
