@@ -36,14 +36,7 @@ function sendLog(guild, embed) {
 
 // --- REGISTER SLASH COMMANDS ---
 const commands = [
-    {
-        name: 'payment',
-        description: 'Menampilkan informasi metode pembayaran resmi store',
-    },
-    {
-        name: 'open-admin',
-        description: 'Memunculkan tombol pendaftaran admin',
-    },
+
     {
         name: 'addrole',
         description: 'Memberikan role kepada seorang member',
