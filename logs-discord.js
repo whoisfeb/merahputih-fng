@@ -38,6 +38,11 @@ function sendLog(guild, embed) {
 // SLASH COMMAND HANDLERS
 // ==========================================
 
+// --- BARIS PEMBUKA YANG HILANG DAN PERBAIKAN ASYNC ---
+client.on('interactionCreate', async (interaction) => {
+    if (!interaction.isChatInputCommand()) return;
+    const { commandName } = interaction;
+// -----------------------------------------------------
 
     // ==================== COMMAND: /addchannel ====================
     if (commandName === 'addchannel') {
@@ -179,6 +184,7 @@ function sendLog(guild, embed) {
         }
     }
 });
+
 
 // ==========================================
 // 1. MANAGEMENT MESSAGES (PESAN)
