@@ -1,0 +1,16 @@
+{
+  "name": "Merah Putih FnG",
+  "version": "1.0.0",
+  "description": "Sistem Bot FnG Merah Puti",
+  "main": "index.js",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0",
+    "discord.js": "^14.14.1",
+    "dotenv": "^16.4.5",
+    "axios": "^1.6.0"
+  },
+  "scripts": {
+    "start": "node -e \"const { spawn } = require('child_process'); [ 'index.js', 'logs-discord.js' ].forEach(f => spawn('node', [f], { stdio: 'inherit' }))\"",
+    "build": "echo 'No build step required'"
+  }
+}
