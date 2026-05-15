@@ -44,6 +44,120 @@ client.on('interactionCreate', async (interaction) => {
     const { commandName } = interaction;
 // -----------------------------------------------------
 
+        // ==================== COMMAND: /addrole ====================
+    if (commandName === 'addrole') {
+        await interaction.deferReply({ ephemeral: true });
+        try {
+            if (!interaction.member.permissions.has(PermissionFlagsBits.ManageRoles)) {
+                return interaction.editReply({ content: '❌ Anda tidak memiliki izin ManageRoles!' });
+            }
+
+            const targetUser = interaction.options.getMember('user');
+            const roleToGive = interaction.options.getRole('role');
+
+            if (targetUser.roles.cache.has(roleToGive.id)) {
+                return interaction.editReply({ content: `❌ Member ${targetUser} sudah memiliki role **${roleToGive.name}**!` });
+            }
+
+            await targetUser.roles.add(roleToGive);
+
+            const embed = new EmbedBuilder()
+                .setTitle('👤 Role Berhasil Diberikan')
+                .setColor('#2ecc71')
+                .addFields(
+                    { name: 'Target Member', value: `${targetUser}`, inline: true },
+                    { name: 'Role Diberikan', value: `${roleToGive}`, inline: true },
+                    { name: 'Diberikan Oleh', value: `${interaction.user.tag}`, inline: true }
+                )
+                .setTimestamp();
+
+            await interaction.editReply({ content: `✅ Berhasil memberikan role **${roleToGive.name}** kepada ${targetUser}.` });
+            sendLog(interaction.guild, embed);
+        } catch (error) {
+            console.error(error);
+            await interaction.editReply({ content: `❌ Gagal memberikan role: ${error.message}` });
+        }
+    }
+
+    // ==================== COMMAND: /removerole ====================
+    if (commandName === 'removerole') {
+        await interaction.deferReply({ ephemeral: true });
+        try {
+            if (!interaction.member.permissions.has(PermissionFlagsBits.ManageRoles)) {
+                return interaction.editReply({ content: '❌ Anda tidak memiliki izin ManageRoles!' });
+            }
+
+            const targetUser = interaction.options.getMember('user');
+            const roleToRemove = interaction.options.getRole('role');
+
+            if (!targetUser.roles.cache.has(roleToRemove.id)) {
+                return interaction.editReply({ content: `❌ Member ${targetUser} memang tidak memiliki role **${roleToRemove.name}**!` });
+            }
+
+            await targetUser.roles.remove(roleToRemove);
+
+            const embed = new EmbedBuilder()
+                .setTitle('👤 Role Berhasil Dihapus')
+                .setColor('#e74c3c')
+                .addFields(
+                    { name: 'Target Member', value: `${targetUser}`, inline: true },
+                    { name: 'Role Dihapus', value: `${roleToRemove}`, inline: true },
+                    { name: 'Dihapus Oleh', value: `${interaction.user.tag}`, inline: true }
+                )
+                .setTimestamp();
+
+            await interaction.editReply({ content: `✅ Berhasil menghapus role **${roleToRemove.name}** dari ${targetUser}.` });
+            sendLog(interaction.guild, embed);
+        } catch (error) {
+            console.error(error);
+            await interaction.editReply({ content: `❌ Gagal menghapus role: ${error.message}` });
+        }
+    }
+
+    // ==================== COMMAND: /payment ====================
+    if (commandName === 'payment') {
+        await interaction.deferReply({ ephemeral: true });
+        try {
+            const embed = new EmbedBuilder()
+                .setTitle('💳 Metode Pembayaran Resmi Store')
+                .setDescription('Silakan gunakan metode pembayaran resmi di bawah ini untuk menghindari penipuan.')
+                .setColor('#00ffcc')
+                .addFields(
+                    { name: 'Bank Transfer', value: 'Bank: **Nama Bank**\nNo. Rek: `Masukkan No Rekening`\nA/N: *Nama Pemilik*', inline: false },
+                    { name: 'E-Wallet', value: 'Dana/Gopay/OVO: `Masukkan No E-Wallet`\nA/N: *Nama Pemilik*', inline: false }
+                )
+                .setFooter({ text: 'Konfirmasi bukti pembayaran ke Admin melalui Tiket!' })
+                .setTimestamp();
+
+            await interaction.editReply({ embeds: [embed] });
+        } catch (error) {
+            console.error(error);
+            await interaction.editReply({ content: `❌ Gagal memproses perintah payment: ${error.message}` });
+        }
+    }
+
+    // ==================== COMMAND: /open-admin ====================
+    if (commandName === 'open-admin') {
+        await interaction.deferReply({ ephemeral: true });
+        try {
+            if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
+                return interaction.editReply({ content: '❌ Anda tidak memiliki izin Administrator!' });
+            }
+
+            const embed = new EmbedBuilder()
+                .setTitle('📋 Pendaftaran Administrasi Bot / Staff')
+                .setDescription('Klik tombol di bawah ini untuk memulai formulir pengajuan staf baru.')
+                .setColor('#9b59b6')
+                .setTimestamp();
+
+            // Catatan: Jika ingin menggunakan tombol aktif, buat ActionRowBuilder secara mandiri di sini.
+            await interaction.editReply({ content: '✅ Fitur pendaftaran berhasil dimunculkan.', embeds: [embed] });
+        } catch (error) {
+            console.error(error);
+            await interaction.editReply({ content: `❌ Gagal memproses perintah open-admin: ${error.message}` });
+        }
+    }
+
     // ==================== COMMAND: /addchannel ====================
     if (commandName === 'addchannel') {
         await interaction.deferReply({ ephemeral: true });
@@ -184,6 +298,7 @@ client.on('interactionCreate', async (interaction) => {
         }
     }
 });
+
 
 
 // ==========================================
