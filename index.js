@@ -97,6 +97,12 @@ const commands = [
 const rest = new REST({ version: '10' }).setToken(CONFIG.TOKEN);
 (async () => {
     try {
+        // PENTING: Pastikan CONFIG.CLIENT_ID tidak typo dan nilainya ada di config Anda!
+        if (!CONFIG.CLIENT_ID) {
+            console.error("❌ ERROR: CONFIG.CLIENT_ID tidak ditemukan / undefined!");
+            return;
+        }
+
         console.log('Memulai penyegaran aplikasi (/) commands...');
         await rest.put(
             Routes.applicationCommands(CONFIG.CLIENT_ID),
@@ -108,9 +114,9 @@ const rest = new REST({ version: '10' }).setToken(CONFIG.TOKEN);
     }
 })();
 
-client.once('ready', () => {
-    console.log(`🤖 Bot siap! Login sebagai ${client.user.tag}`);
+// Mengubah 'ready' menjadi 'clientReady' untuk mengatasi Deprecation Warning
+client.once('clientReady', (readyClient) => {
+    console.log(`🤖 Bot siap! Login sebagai ${readyClient.user.tag}`);
 });
-
 
 client.login(CONFIG.TOKEN);
