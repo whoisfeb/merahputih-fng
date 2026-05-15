@@ -223,7 +223,7 @@ client.on('interactionCreate', async (interaction) => {
             // Bangun permission overwrites secara dinamis
             const permissionOverwrites = [];
 
-            // Loop untuk mengecek pasangan role dan jenis permission yang diinput user (maksimal 3 pasang)
+                        // Loop untuk mengecek pasangan role dan jenis permission yang diinput user (maksimal 3 pasang)
             for (let i = 1; i <= 3; i++) {
                 const role = interaction.options.getRole(`role${i}`);
                 const permType = interaction.options.getString(`permission${i}`);
@@ -233,23 +233,24 @@ client.on('interactionCreate', async (interaction) => {
                         permissionOverwrites.push({
                             id: role.id,
                             type: OverwriteType.Role,
-                            allow: [PermissionFlagsBits.ViewChannel]
+                            allow: [PermissionFlagsBits.ViewChannel] // Menggunakan ViewChannel standar
                         });
                     } else if (permType === 'SEND') {
                         permissionOverwrites.push({
                             id: role.id,
                             type: OverwriteType.Role,
-                            allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessage]
+                            allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages] // PERBAIKAN: Berubah menjadi SendMessages (pake s)
                         });
                     } else if (permType === 'PRIVATE') {
                         permissionOverwrites.push({
                             id: role.id,
                             type: OverwriteType.Role,
-                            deny: [PermissionFlagsBits.ViewChannel]
+                            deny: [PermissionFlagsBits.ViewChannel] // Menggunakan ViewChannel standar
                         });
                     }
                 }
             }
+
 
             // Eksekusi pembuatan kanal teks
             const newChannel = await interaction.guild.channels.create({
