@@ -1,7 +1,19 @@
 // Mengaktifkan dotenv di baris paling pertama
 require('dotenv').config();
 
-const { Client, GatewayIntentBits, AuditLogEvent, EmbedBuilder, Partials, REST, Routes, PermissionFlagsBits } = require('discord.js');
+const { 
+    Client, 
+    GatewayIntentBits, 
+    AuditLogEvent, 
+    EmbedBuilder, 
+    Partials, 
+    REST, 
+    Routes, 
+    PermissionFlagsBits,
+    ChannelType,      // <--- TAMBAHKAN INI
+    OverwriteType,    // <--- TAMBAHKAN INI
+    MessageFlags      // <--- TAMBAHKAN INI
+} = require('discord.js');
 
 const client = new Client({
     intents: [
@@ -46,7 +58,8 @@ client.on('interactionCreate', async (interaction) => {
 
         // ==================== COMMAND: /addrole ====================
     if (commandName === 'addrole') {
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
+
         try {
             if (!interaction.member.permissions.has(PermissionFlagsBits.ManageRoles)) {
                 return interaction.editReply({ content: '❌ Anda tidak memiliki izin ManageRoles!' });
@@ -81,7 +94,8 @@ client.on('interactionCreate', async (interaction) => {
 
     // ==================== COMMAND: /removerole ====================
     if (commandName === 'removerole') {
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
+
         try {
             if (!interaction.member.permissions.has(PermissionFlagsBits.ManageRoles)) {
                 return interaction.editReply({ content: '❌ Anda tidak memiliki izin ManageRoles!' });
@@ -114,53 +128,90 @@ client.on('interactionCreate', async (interaction) => {
         }
     }
 
-    // ==================== COMMAND: /payment ====================
-    if (commandName === 'payment') {
-        await interaction.deferReply({ ephemeral: true });
+        // ==================== COMMAND: /createrole ====================
+    if (commandName === 'createrole') {
+        await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
         try {
-            const embed = new EmbedBuilder()
-                .setTitle('💳 Metode Pembayaran Resmi Store')
-                .setDescription('Silakan gunakan metode pembayaran resmi di bawah ini untuk menghindari penipuan.')
-                .setColor('#00ffcc')
-                .addFields(
-                    { name: 'Bank Transfer', value: 'Bank: **Nama Bank**\nNo. Rek: `Masukkan No Rekening`\nA/N: *Nama Pemilik*', inline: false },
-                    { name: 'E-Wallet', value: 'Dana/Gopay/OVO: `Masukkan No E-Wallet`\nA/N: *Nama Pemilik*', inline: false }
-                )
-                .setFooter({ text: 'Konfirmasi bukti pembayaran ke Admin melalui Tiket!' })
-                .setTimestamp();
-
-            await interaction.editReply({ embeds: [embed] });
-        } catch (error) {
-            console.error(error);
-            await interaction.editReply({ content: `❌ Gagal memproses perintah payment: ${error.message}` });
-        }
-    }
-
-    // ==================== COMMAND: /open-admin ====================
-    if (commandName === 'open-admin') {
-        await interaction.deferReply({ ephemeral: true });
-        try {
-            if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
-                return interaction.editReply({ content: '❌ Anda tidak memiliki izin Administrator!' });
+            if (!interaction.member.permissions.has(PermissionFlagsBits.ManageRoles)) {
+                return interaction.editReply({ content: '❌ Anda tidak memiliki izin ManageRoles!' });
             }
 
+            const roleName = interaction.options.getString('name');
+            const roleColor = interaction.options.getString('color') || '#95a5a6'; // Default abu-abu jika kosong
+
+            // Validasi format warna HEX sederhana
+            if (roleColor && !/^#[0-9A-F]{6}$/i.test(roleColor)) {
+                return interaction.editReply({ content: '❌ Format warna salah! Gunakan kode Hex seperti `#ff0000` (Merah) atau `#00ff00` (Hijau).' });
+            }
+
+            // Eksekusi pembuatan role
+            const newRole = await interaction.guild.roles.create({
+                name: roleName,
+                color: roleColor,
+                reason: `Dibuat oleh ${interaction.user.tag} via bot`
+            });
+
             const embed = new EmbedBuilder()
-                .setTitle('📋 Pendaftaran Administrasi Bot / Staff')
-                .setDescription('Klik tombol di bawah ini untuk memulai formulir pengajuan staf baru.')
-                .setColor('#9b59b6')
+                .setTitle('🆕 Role Berhasil Dibuat')
+                .setColor(roleColor)
+                .addFields(
+                    { name: 'Nama Role', value: `${newRole}`, inline: true },
+                    { name: 'Warna (HEX)', value: `\`${roleColor}\``, inline: true },
+                    { name: 'Dibuat Oleh', value: `${interaction.user.tag}`, inline: true }
+                )
                 .setTimestamp();
 
-            // Catatan: Jika ingin menggunakan tombol aktif, buat ActionRowBuilder secara mandiri di sini.
-            await interaction.editReply({ content: '✅ Fitur pendaftaran berhasil dimunculkan.', embeds: [embed] });
+            await interaction.editReply({ content: `✅ Role **${newRole.name}** berhasil dibuat!` });
+            sendLog(interaction.guild, embed);
         } catch (error) {
             console.error(error);
-            await interaction.editReply({ content: `❌ Gagal memproses perintah open-admin: ${error.message}` });
+            await interaction.editReply({ content: `❌ Gagal membuat role: ${error.message}` });
         }
     }
+
+    // ==================== COMMAND: /deleterole ====================
+    if (commandName === 'deleterole') {
+        await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
+        try {
+            if (!interaction.member.permissions.has(PermissionFlagsBits.ManageRoles)) {
+                return interaction.editReply({ content: '❌ Anda tidak memiliki izin ManageRoles!' });
+            }
+
+            const roleToDelete = interaction.options.getRole('role');
+
+            // Proteksi agar tidak menghapus @everyone atau role milik bot itu sendiri
+            if (roleToDelete.id === interaction.guild.id) {
+                return interaction.editReply({ content: '❌ Anda tidak bisa menghapus role @everyone!' });
+            }
+            if (roleToDelete.managed) {
+                return interaction.editReply({ content: '❌ Role ini dikelola oleh integrasi eksternal/bot lain dan tidak bisa dihapus manual.' });
+            }
+
+            const roleNameBackup = roleToDelete.name;
+            await roleToDelete.delete(`Dihapus oleh ${interaction.user.tag} via bot`);
+
+            const embed = new EmbedBuilder()
+                .setTitle('🗑️ Role Berhasil Dihapus')
+                .setColor('#e74c3c')
+                .addFields(
+                    { name: 'Nama Role (Sebelumnya)', value: `@${roleNameBackup}`, inline: true },
+                    { name: 'Dihapus Oleh', value: `${interaction.user.tag}`, inline: true }
+                )
+                .setTimestamp();
+
+            await interaction.editReply({ content: `✅ Role **${roleNameBackup}** berhasil dihapus dari server.` });
+            sendLog(interaction.guild, embed);
+        } catch (error) {
+            console.error(error);
+            await interaction.editReply({ content: `❌ Gagal menghapus role: ${error.message}` });
+        }
+    }
+
 
     // ==================== COMMAND: /addchannel ====================
     if (commandName === 'addchannel') {
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
+
         try {
             if (!interaction.member.permissions.has(PermissionFlagsBits.ManageChannels)) {
                 return interaction.editReply({ content: '❌ Anda tidak memiliki izin ManageChannels!' });
@@ -228,7 +279,8 @@ client.on('interactionCreate', async (interaction) => {
 
     // ==================== COMMAND: /editchannel ====================
     if (commandName === 'editchannel') {
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
+
         try {
             if (!interaction.member.permissions.has(PermissionFlagsBits.ManageChannels)) {
                 return interaction.editReply({ content: '❌ Anda tidak memiliki izin ManageChannels!' });
@@ -268,7 +320,8 @@ client.on('interactionCreate', async (interaction) => {
 
     // ==================== COMMAND: /deletechannel ====================
     if (commandName === 'deletechannel') {
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
+
         try {
             if (!interaction.member.permissions.has(PermissionFlagsBits.ManageChannels)) {
                 return interaction.editReply({ content: '❌ Anda tidak memiliki izin ManageChannels!' });
