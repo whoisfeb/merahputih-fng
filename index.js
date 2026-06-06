@@ -35,6 +35,7 @@ function sendLog(guild, embed) {
 }
 
 // --- REGISTER SLASH COMMANDS ---
+// --- REGISTER SLASH COMMANDS ---
 const commands = [
 
     {
@@ -53,7 +54,7 @@ const commands = [
             { name: 'role', type: 9, description: 'Role yang akan dihapus', required: true },
         ],
     },
-        {
+    {
         name: 'createrole',
         description: 'Membuat role baru di server dengan kustomisasi warna',
         options: [
@@ -98,6 +99,16 @@ const commands = [
         options: [
             { name: 'channel', type: 7, description: 'Kanal yang ingin dihapus', channel_types: [ChannelType.GuildText, ChannelType.GuildVoice], required: true },
             { name: 'reason', type: 3, description: 'Alasan penghapusan kanal', required: false },
+        ],
+    },
+    {
+        name: 'add-fng',
+        description: 'Membuat FNG baru dengan role dan 2 channel (about & activity)',
+        options: [
+            { name: 'name', type: 3, description: 'Nama FNG (misal: ❤ Titik Kumpul)', required: true },
+            { name: 'role', type: 9, description: 'Pilih role untuk FNG', required: true },
+            { name: 'category_about', type: 7, description: 'Pilih kategori untuk channel about', channel_types: [ChannelType.GuildCategory], required: true },
+            { name: 'category_act', type: 7, description: 'Pilih kategori untuk channel activity', channel_types: [ChannelType.GuildCategory], required: true },
         ],
     },
 ];
