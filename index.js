@@ -103,10 +103,9 @@ const commands = [
     },
     {
         name: 'add-fng',
-        description: 'Membuat FNG baru dengan role dan 2 channel (about & activity)',
+        description: 'Membuat FNG baru dengan role otomatis + 2 channel (about & activity)',
         options: [
             { name: 'name', type: 3, description: 'Nama FNG (misal: ❤ Titik Kumpul)', required: true },
-            { name: 'role', type: 9, description: 'Pilih role untuk FNG', required: true },
             { name: 'category_about', type: 7, description: 'Pilih kategori untuk channel about', channel_types: [ChannelType.GuildCategory], required: true },
             { name: 'category_act', type: 7, description: 'Pilih kategori untuk channel activity', channel_types: [ChannelType.GuildCategory], required: true },
         ],
