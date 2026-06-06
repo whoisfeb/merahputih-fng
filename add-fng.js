@@ -88,7 +88,6 @@ async function handleAddFng(interaction) {
         }
 
         const fngName = interaction.options.getString('name');
-        const selectedRole = interaction.options.getRole('role');
         const categoryAbout = interaction.options.getChannel('category_about');
         const categoryAct = interaction.options.getChannel('category_act');
 
@@ -106,21 +105,28 @@ async function handleAddFng(interaction) {
         // Format nama channel
         const channelName = formatChannelName(fngName);
 
-        // Buat channel ABOUT (View Only)
+        // 1. BUAT ROLE BARU
+        const newRole = await interaction.guild.roles.create({
+            name: fngName,
+            color: '#2ecc71', // Warna hijau default, bisa diganti
+            reason: `FNG dibuat oleh ${interaction.user.tag}`
+        });
+
+        // 2. BUAT CHANNEL ABOUT (View Only)
         const channelAbout = await interaction.guild.channels.create({
             name: channelName,
             type: ChannelType.GuildText,
             parent: categoryAbout.id,
-            permissionOverwrites: createViewPermissions(selectedRole.id),
+            permissionOverwrites: createViewPermissions(newRole.id),
             topic: `📖 Channel Tentang ${fngName}`
         });
 
-        // Buat channel ACTIVITY (Send Messages)
+        // 3. BUAT CHANNEL ACTIVITY (Send Messages)
         const channelAct = await interaction.guild.channels.create({
             name: channelName,
             type: ChannelType.GuildText,
             parent: categoryAct.id,
-            permissionOverwrites: createActivityPermissions(selectedRole.id),
+            permissionOverwrites: createActivityPermissions(newRole.id),
             topic: `💬 Channel Activity ${fngName}`
         });
 
@@ -130,8 +136,8 @@ async function handleAddFng(interaction) {
             .setColor('#2ecc71')
             .addFields(
                 { name: 'Nama FNG', value: `${fngName}`, inline: true },
-                { name: 'Role', value: `${selectedRole}`, inline: true },
-                { name: 'Role ID', value: `\`${selectedRole.id}\``, inline: true },
+                { name: 'Role Baru', value: `${newRole}`, inline: true },
+                { name: 'Role ID', value: `\`${newRole.id}\``, inline: true },
                 { name: '📖 Channel About', value: `${channelAbout}`, inline: true },
                 { name: 'Kategori About', value: `${categoryAbout.name}`, inline: true },
                 { name: 'Channel ID', value: `\`${channelAbout.id}\``, inline: true },
@@ -151,7 +157,7 @@ async function handleAddFng(interaction) {
             .setDescription(`Sistem FNG telah membuat grup baru dengan informasi berikut:`)
             .addFields(
                 { name: 'Nama FNG', value: `${fngName}`, inline: true },
-                { name: 'Role', value: `${selectedRole} (\`${selectedRole.id}\`)`, inline: true },
+                { name: 'Role Baru', value: `${newRole} (\`${newRole.id}\`)`, inline: true },
                 { name: '📖 Channel About', value: `${channelAbout} (\`${channelAbout.id}\`)` },
                 { name: '💬 Channel Activity', value: `${channelAct} (\`${channelAct.id}\`)` },
                 { name: 'Dibuat Oleh', value: `${interaction.user} (${interaction.user.tag})`, inline: true },
