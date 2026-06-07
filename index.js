@@ -144,7 +144,7 @@ const rest = new REST({ version: '10' }).setToken(CONFIG.TOKEN);
 })();
 
 // Import handler add-fng
-const { handleAddFng } = require('addFng');
+const { handleAddFng } = require('./add-fng');
 
 // Event: Interaction (Slash Commands)
 client.on('interactionCreate', async (interaction) => {
