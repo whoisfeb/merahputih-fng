@@ -119,22 +119,22 @@ async function handleAddFng(interaction) {
             reason: `FNG dibuat oleh ${interaction.user.tag}`
         });
 
-        // Kumpulkan semua permission untuk channel ABOUT
+        // Kumpulkan semua permission untuk channel ABOUT (Send Messages untuk role utama)
         const aboutPermissions = [
             {
                 id: newRole.id,
                 type: OverwriteType.Role,
                 allow: [
                     PermissionFlagsBits.ViewChannel,
-                    PermissionFlagsBits.ReadMessageHistory
+                    PermissionFlagsBits.SendMessages,
+                    PermissionFlagsBits.ReadMessageHistory,
+                    PermissionFlagsBits.AddReactions,
+                    PermissionFlagsBits.EmbedLinks,
+                    PermissionFlagsBits.AttachFiles
                 ],
                 deny: [
-                    PermissionFlagsBits.SendMessages,
                     PermissionFlagsBits.CreatePublicThreads,
                     PermissionFlagsBits.CreatePrivateThreads,
-                    PermissionFlagsBits.EmbedLinks,
-                    PermissionFlagsBits.AttachFiles,
-                    PermissionFlagsBits.AddReactions,
                     PermissionFlagsBits.UseExternalEmojis,
                     PermissionFlagsBits.MentionEveryone,
                     PermissionFlagsBits.ManageMessages,
@@ -143,7 +143,7 @@ async function handleAddFng(interaction) {
             }
         ];
 
-        // Kumpulkan semua permission untuk channel ACTIVITY
+        // Kumpulkan semua permission untuk channel ACTIVITY (Send Messages untuk role utama)
         const activityPermissions = [
             {
                 id: newRole.id,
@@ -167,9 +167,9 @@ async function handleAddFng(interaction) {
             }
         ];
 
-        // Tambahkan role1-3 dengan permission1-3 jika ada
+        // Tambahkan role1-2 dengan permission1-2 jika ada
         let additionalRolesInfo = '';
-        for (let i = 1; i <= 3; i++) {
+        for (let i = 1; i <= 2; i++) {
             const role = interaction.options.getRole(`role${i}`);
             const permission = interaction.options.getString(`permission${i}`);
 
@@ -181,7 +181,7 @@ async function handleAddFng(interaction) {
             }
         }
 
-        // 2. BUAT CHANNEL ABOUT (View Only untuk role utama)
+        // 2. BUAT CHANNEL ABOUT (Send Messages untuk role utama)
         console.log(`[ADD-FNG] Membuat channel ABOUT: ${channelName}`);
         const channelAbout = await interaction.guild.channels.create({
             name: channelName,
@@ -213,7 +213,7 @@ async function handleAddFng(interaction) {
                 { name: 'Role ID', value: `\`${newRole.id}\``, inline: true },
                 { name: '📖 Channel About', value: `${channelAbout}`, inline: true },
                 { name: 'Kategori', value: `${categoryAbout.name}`, inline: true },
-                { name: 'Permission', value: `👁️ View Only`, inline: true },
+                { name: 'Permission', value: `✅ Send Messages`, inline: true },
                 { name: '💬 Channel Activity', value: `${channelAct}`, inline: true },
                 { name: 'Kategori', value: `${categoryAct.name}`, inline: true },
                 { name: 'Permission', value: `✅ Send Messages`, inline: true }
@@ -233,7 +233,7 @@ async function handleAddFng(interaction) {
 
         // Buat embed untuk log
         let logAdditionalRoles = '';
-        for (let i = 1; i <= 3; i++) {
+        for (let i = 1; i <= 2; i++) {
             const role = interaction.options.getRole(`role${i}`);
             const permission = interaction.options.getString(`permission${i}`);
             if (role && permission) {
@@ -248,7 +248,7 @@ async function handleAddFng(interaction) {
             .addFields(
                 { name: 'Nama FNG', value: `${fngName}`, inline: true },
                 { name: 'Role Utama', value: `${newRole} (\`${newRole.id}\`)`, inline: true },
-                { name: '📖 Channel About', value: `${channelAbout} (\`${channelAbout.id}\`)\n👁️ Role ${newRole.name}: ViewChannel, ReadMessageHistory (View Only)` },
+                { name: '📖 Channel About', value: `${channelAbout} (\`${channelAbout.id}\`)\n✅ Role ${newRole.name}: ViewChannel, SendMessages, ReadMessageHistory, EmbedLinks, AttachFiles, AddReactions` },
                 { name: '💬 Channel Activity', value: `${channelAct} (\`${channelAct.id}\`)\n✅ Role ${newRole.name}: ViewChannel, SendMessages, ReadMessageHistory, EmbedLinks, AttachFiles, AddReactions` }
             );
 
