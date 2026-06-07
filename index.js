@@ -118,9 +118,6 @@ const commands = [
             { name: 'role2', type: 9, description: 'Role kedua yang diberi izin khusus', required: false },
             { name: 'permission2', type: 3, description: 'Izin untuk role kedua', required: false, choices: [{ name: 'Lihat Kanal (View)', value: 'VIEW' }, { name: 'Kirim Pesan (Send)', value: 'SEND' }, { name: 'Kanal Privat (Private)', value: 'PRIVATE' }] },
             
-            // Opsi Role 3 & Permission 3
-            { name: 'role3', type: 9, description: 'Role ketiga yang diberi izin khusus', required: false },
-            { name: 'permission3', type: 3, description: 'Izin untuk role ketiga', required: false, choices: [{ name: 'Lihat Kanal (View)', value: 'VIEW' }, { name: 'Kirim Pesan (Send)', value: 'SEND' }, { name: 'Kanal Privat (Private)', value: 'PRIVATE' }] },
         ],
     },
 
