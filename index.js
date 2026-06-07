@@ -110,14 +110,13 @@ const commands = [
             { name: 'category_about', type: 7, description: 'Pilih kategori untuk channel about', channel_types: [ChannelType.GuildCategory], required: true },
             { name: 'category_act', type: 7, description: 'Pilih kategori untuk channel activity', channel_types: [ChannelType.GuildCategory], required: true },
             
-            // Opsi Role 1 & Permission 1
+            // Role 1 & Permission 1
             { name: 'role1', type: 9, description: 'Role pertama yang diberi izin khusus', required: false },
             { name: 'permission1', type: 3, description: 'Izin untuk role pertama', required: false, choices: [{ name: 'Lihat Kanal (View)', value: 'VIEW' }, { name: 'Kirim Pesan (Send)', value: 'SEND' }, { name: 'Kanal Privat (Private)', value: 'PRIVATE' }] },
             
-            // Opsi Role 2 & Permission 2
+            // Role 2 & Permission 2
             { name: 'role2', type: 9, description: 'Role kedua yang diberi izin khusus', required: false },
             { name: 'permission2', type: 3, description: 'Izin untuk role kedua', required: false, choices: [{ name: 'Lihat Kanal (View)', value: 'VIEW' }, { name: 'Kirim Pesan (Send)', value: 'SEND' }, { name: 'Kanal Privat (Private)', value: 'PRIVATE' }] },
-            
         ],
     },
 
