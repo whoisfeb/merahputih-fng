@@ -143,6 +143,29 @@ const rest = new REST({ version: '10' }).setToken(CONFIG.TOKEN);
     }
 })();
 
+// Import handler add-fng
+const { handleAddFng } = require('addFng');
+
+// Event: Interaction (Slash Commands)
+client.on('interactionCreate', async (interaction) => {
+    if (!interaction.isChatInputCommand()) return;
+
+    try {
+        if (interaction.commandName === 'add-fng') {
+            return await handleAddFng(interaction);
+        }
+    } catch (error) {
+        console.error('❌ Error:', error);
+        try {
+            await interaction.editReply({ content: `❌ Error: ${error.message}` });
+        } catch (e) {
+            console.error('Gagal mengirim error reply:', e);
+        }
+    }
+});
+
+client.login(CONFIG.TOKEN);
+
 // Mengubah 'ready' menjadi 'clientReady' untuk mengatasi Deprecation Warning
 client.once('clientReady', (readyClient) => {
     console.log(`🤖 Bot siap! Login sebagai ${readyClient.user.tag}`);
