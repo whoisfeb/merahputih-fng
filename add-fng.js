@@ -1,6 +1,6 @@
 const { PermissionFlagsBits, EmbedBuilder, MessageFlags, ChannelType, OverwriteType } = require('discord.js');
 
-const LOG_CHANNEL_ID = '1499605521416847512'; // Ganti dengan ID channel log server Anda
+const LOG_CHANNEL_ID = process.env.LOG_CHANNEL_ID;
 
 // Helper untuk mengirim log
 function sendLog(guild, embed) {
@@ -31,16 +31,13 @@ function validateCategory(category, categoryName) {
     return { valid: true };
 }
 
-// Buat permission untuk channel ABOUT (View Only)
-function createViewPermissions(roleId) {
-    return [
-        {
+// Helper: Buat permission berdasarkan tipe
+function createPermissionByType(roleId, permType) {
+    if (permType === 'VIEW') {
+        return {
             id: roleId,
             type: OverwriteType.Role,
-            allow: [
-                PermissionFlagsBits.ViewChannel,
-                PermissionFlagsBits.ReadMessageHistory
-            ],
+            allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.ReadMessageHistory],
             deny: [
                 PermissionFlagsBits.SendMessages,
                 PermissionFlagsBits.CreatePublicThreads,
@@ -53,23 +50,18 @@ function createViewPermissions(roleId) {
                 PermissionFlagsBits.ManageMessages,
                 PermissionFlagsBits.ManageWebhooks
             ]
-        }
-    ];
-}
-
-// Buat permission untuk channel ACTIVITY (Send & Read)
-function createActivityPermissions(roleId) {
-    return [
-        {
+        };
+    } else if (permType === 'SEND') {
+        return {
             id: roleId,
             type: OverwriteType.Role,
             allow: [
                 PermissionFlagsBits.ViewChannel,
                 PermissionFlagsBits.SendMessages,
                 PermissionFlagsBits.ReadMessageHistory,
-                PermissionFlagsBits.AddReactions,
                 PermissionFlagsBits.EmbedLinks,
-                PermissionFlagsBits.AttachFiles
+                PermissionFlagsBits.AttachFiles,
+                PermissionFlagsBits.AddReactions
             ],
             deny: [
                 PermissionFlagsBits.CreatePublicThreads,
@@ -79,8 +71,14 @@ function createActivityPermissions(roleId) {
                 PermissionFlagsBits.ManageMessages,
                 PermissionFlagsBits.ManageWebhooks
             ]
-        }
-    ];
+        };
+    } else if (permType === 'PRIVATE') {
+        return {
+            id: roleId,
+            type: OverwriteType.Role,
+            deny: [PermissionFlagsBits.ViewChannel]
+        };
+    }
 }
 
 // Main handler untuk /add-fng command
@@ -121,26 +119,86 @@ async function handleAddFng(interaction) {
             reason: `FNG dibuat oleh ${interaction.user.tag}`
         });
 
-        // 2. BUAT CHANNEL ABOUT (View Only)
-        // Role hanya bisa VIEW, TIDAK bisa SEND MESSAGE
+        // Kumpulkan semua permission untuk channel ABOUT
+        const aboutPermissions = [
+            {
+                id: newRole.id,
+                type: OverwriteType.Role,
+                allow: [
+                    PermissionFlagsBits.ViewChannel,
+                    PermissionFlagsBits.ReadMessageHistory
+                ],
+                deny: [
+                    PermissionFlagsBits.SendMessages,
+                    PermissionFlagsBits.CreatePublicThreads,
+                    PermissionFlagsBits.CreatePrivateThreads,
+                    PermissionFlagsBits.EmbedLinks,
+                    PermissionFlagsBits.AttachFiles,
+                    PermissionFlagsBits.AddReactions,
+                    PermissionFlagsBits.UseExternalEmojis,
+                    PermissionFlagsBits.MentionEveryone,
+                    PermissionFlagsBits.ManageMessages,
+                    PermissionFlagsBits.ManageWebhooks
+                ]
+            }
+        ];
+
+        // Kumpulkan semua permission untuk channel ACTIVITY
+        const activityPermissions = [
+            {
+                id: newRole.id,
+                type: OverwriteType.Role,
+                allow: [
+                    PermissionFlagsBits.ViewChannel,
+                    PermissionFlagsBits.SendMessages,
+                    PermissionFlagsBits.ReadMessageHistory,
+                    PermissionFlagsBits.AddReactions,
+                    PermissionFlagsBits.EmbedLinks,
+                    PermissionFlagsBits.AttachFiles
+                ],
+                deny: [
+                    PermissionFlagsBits.CreatePublicThreads,
+                    PermissionFlagsBits.CreatePrivateThreads,
+                    PermissionFlagsBits.UseExternalEmojis,
+                    PermissionFlagsBits.MentionEveryone,
+                    PermissionFlagsBits.ManageMessages,
+                    PermissionFlagsBits.ManageWebhooks
+                ]
+            }
+        ];
+
+        // Tambahkan role1-3 dengan permission1-3 jika ada
+        let additionalRolesInfo = '';
+        for (let i = 1; i <= 3; i++) {
+            const role = interaction.options.getRole(`role${i}`);
+            const permission = interaction.options.getString(`permission${i}`);
+
+            if (role && permission) {
+                const perm = createPermissionByType(role.id, permission);
+                aboutPermissions.push(perm);
+                activityPermissions.push(perm);
+                additionalRolesInfo += `\n✅ ${role.name} - ${permission}`;
+            }
+        }
+
+        // 2. BUAT CHANNEL ABOUT (View Only untuk role utama)
         console.log(`[ADD-FNG] Membuat channel ABOUT: ${channelName}`);
         const channelAbout = await interaction.guild.channels.create({
             name: channelName,
             type: ChannelType.GuildText,
             parent: categoryAbout.id,
-            permissionOverwrites: createViewPermissions(newRole.id),
+            permissionOverwrites: aboutPermissions,
             topic: `📖 Channel Tentang ${fngName}`,
             reason: `Channel About untuk FNG ${fngName}`
         });
 
-        // 3. BUAT CHANNEL ACTIVITY (Send Messages)
-        // Role otomatis bisa SEND MESSAGE di channel ini
+        // 3. BUAT CHANNEL ACTIVITY (Send Messages untuk role utama)
         console.log(`[ADD-FNG] Membuat channel ACTIVITY: ${channelName}`);
         const channelAct = await interaction.guild.channels.create({
             name: channelName,
             type: ChannelType.GuildText,
             parent: categoryAct.id,
-            permissionOverwrites: createActivityPermissions(newRole.id),
+            permissionOverwrites: activityPermissions,
             topic: `💬 Channel Activity ${fngName}`,
             reason: `Channel Activity untuk FNG ${fngName}`
         });
@@ -151,34 +209,59 @@ async function handleAddFng(interaction) {
             .setColor('#2ecc71')
             .addFields(
                 { name: 'Nama FNG', value: `${fngName}`, inline: true },
-                { name: 'Role Baru', value: `${newRole}`, inline: true },
+                { name: 'Role Utama', value: `${newRole}`, inline: true },
                 { name: 'Role ID', value: `\`${newRole.id}\``, inline: true },
                 { name: '📖 Channel About', value: `${channelAbout}`, inline: true },
-                { name: 'Kategori About', value: `${categoryAbout.name}`, inline: true },
+                { name: 'Kategori', value: `${categoryAbout.name}`, inline: true },
                 { name: 'Permission', value: `👁️ View Only`, inline: true },
                 { name: '💬 Channel Activity', value: `${channelAct}`, inline: true },
-                { name: 'Kategori Activity', value: `${categoryAct.name}`, inline: true },
-                { name: 'Permission', value: `✅ Send Messages`, inline: true },
-                { name: 'Dibuat Oleh', value: `${interaction.user.tag}`, inline: false }
-            )
-            .setTimestamp();
+                { name: 'Kategori', value: `${categoryAct.name}`, inline: true },
+                { name: 'Permission', value: `✅ Send Messages`, inline: true }
+            );
+
+        if (additionalRolesInfo) {
+            successEmbed.addFields(
+                { name: 'Role Tambahan', value: additionalRolesInfo, inline: false }
+            );
+        }
+
+        successEmbed.addFields(
+            { name: 'Dibuat Oleh', value: `${interaction.user.tag}`, inline: false }
+        ).setTimestamp();
 
         await interaction.editReply({ embeds: [successEmbed] });
 
         // Buat embed untuk log
+        let logAdditionalRoles = '';
+        for (let i = 1; i <= 3; i++) {
+            const role = interaction.options.getRole(`role${i}`);
+            const permission = interaction.options.getString(`permission${i}`);
+            if (role && permission) {
+                logAdditionalRoles += `\n  • ${role.name} (\`${role.id}\`) - ${permission}`;
+            }
+        }
+
         const logEmbed = new EmbedBuilder()
             .setTitle('🆕 FNG Baru Dibuat')
             .setColor('#2ecc71')
             .setDescription(`Sistem FNG telah membuat grup baru dengan informasi berikut:`)
             .addFields(
                 { name: 'Nama FNG', value: `${fngName}`, inline: true },
-                { name: 'Role Baru', value: `${newRole} (\`${newRole.id}\`)`, inline: true },
-                { name: '📖 Channel About', value: `${channelAbout} (\`${channelAbout.id}\`)\n👁️ Permission: ViewChannel, ReadMessageHistory (TIDAK bisa kirim pesan)` },
-                { name: '💬 Channel Activity', value: `${channelAct} (\`${channelAct.id}\`)\n✅ Permission: ViewChannel, SendMessages, ReadMessageHistory, EmbedLinks, AttachFiles, AddReactions` },
-                { name: 'Dibuat Oleh', value: `${interaction.user} (${interaction.user.tag})`, inline: true },
-                { name: 'Waktu', value: `<t:${Math.floor(Date.now() / 1000)}:F>`, inline: true }
-            )
-            .setTimestamp();
+                { name: 'Role Utama', value: `${newRole} (\`${newRole.id}\`)`, inline: true },
+                { name: '📖 Channel About', value: `${channelAbout} (\`${channelAbout.id}\`)\n👁️ Role ${newRole.name}: ViewChannel, ReadMessageHistory (View Only)` },
+                { name: '💬 Channel Activity', value: `${channelAct} (\`${channelAct.id}\`)\n✅ Role ${newRole.name}: ViewChannel, SendMessages, ReadMessageHistory, EmbedLinks, AttachFiles, AddReactions` }
+            );
+
+        if (logAdditionalRoles) {
+            logEmbed.addFields(
+                { name: 'Role Tambahan', value: logAdditionalRoles }
+            );
+        }
+
+        logEmbed.addFields(
+            { name: 'Dibuat Oleh', value: `${interaction.user} (${interaction.user.tag})`, inline: true },
+            { name: 'Waktu', value: `<t:${Math.floor(Date.now() / 1000)}:F>`, inline: true }
+        ).setTimestamp();
 
         sendLog(interaction.guild, logEmbed);
         console.log(`[ADD-FNG] ✅ FNG ${fngName} berhasil dibuat!`);
@@ -186,7 +269,6 @@ async function handleAddFng(interaction) {
     } catch (error) {
         console.error('[ADD-FNG] ❌ Error:', error);
         
-        // Pastikan error message terkirim ke user
         try {
             await interaction.editReply({ 
                 content: `❌ Gagal membuat FNG: ${error.message}` 
@@ -195,7 +277,6 @@ async function handleAddFng(interaction) {
             console.error('[ADD-FNG] Gagal mengirim reply error:', replyError);
         }
 
-        // Log error ke channel log
         const errorEmbed = new EmbedBuilder()
             .setTitle('❌ Error: Gagal Membuat FNG')
             .setColor('#e74c3c')
