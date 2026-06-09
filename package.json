@@ -10,7 +10,7 @@
     "axios": "^1.6.0"
   },
   "scripts": {
-    "start": "node -e \"const { spawn } = require('child_process'); [ 'index.js', 'logs-discord.js', 'add-fng.js' ].forEach(f => spawn('node', [f], { stdio: 'inherit' }))\"",
+    "start": "node -e \"const { spawn } = require('child_process'); [ 'index.js', 'logs-discord.js', 'add-fng.js', 'ambil-role.js' ].forEach(f => spawn('node', [f], { stdio: 'inherit' }))\"",
     "build": "echo 'No build step required'"
   }
 }
