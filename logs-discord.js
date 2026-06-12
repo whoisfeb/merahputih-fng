@@ -731,7 +731,7 @@ client.on('roleUpdate', async (oldRole, newRole) => {
         const newPerms = newRole.permissions.toArray();
         
         const permsDitambahkan = newPerms.filter(p => !oldPerms.includes(p));
-        const permsDihapus = oldPerms.filter(p => !oldPerms.includes(p));
+        const permsDihapus = oldPerms.filter(p => !newPerms.includes(p));
 
         const embed = new EmbedBuilder()
             .setTitle('🛠️ Izin (Permission) Global Role Diubah')
