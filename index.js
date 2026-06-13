@@ -38,36 +38,25 @@ function sendLog(guild, embed) {
 // --- REGISTER SLASH COMMANDS ---
 const commands = [
 
-                {
+        {
         name: 'say',
-        description: 'Kirim pesan manual dengan banyak tag sekaligus',
+        description: 'Kirim pesan manual (khusus role tertentu)',
         options: [
+            { 
+                name: 'message', 
+                type: 3, 
+                description: 'Pesan yang ingin dikirim', 
+                required: true 
+            },
             { 
                 name: 'channel', 
                 type: 7, 
                 description: 'Pilih channel tujuan (kosongkan jika ingin di channel saat ini)', 
-                required: false 
-            },
-            { 
-                name: 'tag-roles', 
-                type: 3, // Type 3 adalah STRING teks biasa
-                description: 'Ketik nama-nama role yang ingin ditag (Pisahkan dengan koma, contoh: Admin, Warga, Staf)', 
-                required: false 
-            },
-            { 
-                name: 'tag-users', 
-                type: 3, // Type 3 adalah STRING teks biasa
-                description: 'Ketik nama/username orang yang ingin ditag (Pisahkan dengan koma, contoh: bram, udin)', 
+                // 💡 Baris channel_types di sini sudah dihapus total
                 required: false 
             }
         ],
     },
-
-
-
-
-
-
 
 
     {
