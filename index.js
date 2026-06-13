@@ -45,7 +45,7 @@ const commands = [
             { 
                 name: 'message', 
                 type: 3, 
-                description: 'Pesan yang ingin dikirim', 
+                description: 'gunakan \n untuk membuat bari baru contoh baris pertama\nbaris kedua', 
                 required: true 
             },
             { 
