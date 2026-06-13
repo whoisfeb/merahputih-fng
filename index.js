@@ -38,7 +38,7 @@ function sendLog(guild, embed) {
 // --- REGISTER SLASH COMMANDS ---
 const commands = [
 
-        {
+            {
         name: 'say',
         description: 'Kirim pesan manual (khusus role tertentu)',
         options: [
@@ -50,13 +50,14 @@ const commands = [
             },
             { 
                 name: 'channel', 
-                type: 7, // Type 7 adalah CHANNEL
+                type: 7, 
                 description: 'Pilih channel tujuan (kosongkan jika ingin di channel saat ini)', 
-                channel_types:, // Angka 0 membatasi hanya bisa memilih GUILD_TEXT / channel teks biasa
+                channel_types:, // 👈 UBAH MENJADI SEPERTI INI (Pakai kurung siku dan angka 0)
                 required: false 
             }
         ],
     },
+
 
 
 
