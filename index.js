@@ -39,6 +39,15 @@ function sendLog(guild, embed) {
 const commands = [
 
     {
+        name: 'say',
+        description: 'Kirim pesan manual (khusus role tertentu)',
+        options: [
+            { name: 'message', type: 3, description: 'Pesan yang ingin dikirim', required: true }
+        ],
+    },
+
+
+    {
         name: 'addrole',
         description: 'Memberikan role kepada seorang member',
         options: [
