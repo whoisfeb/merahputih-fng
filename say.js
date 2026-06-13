@@ -54,12 +54,14 @@ async function handleSay(interaction) {
         let finalMessage = submitted.fields.getTextInputValue('say_message_input');
         let tagString = '';
 
-        // PROSES PENCARIAN BANYAK ROLE OTOMATIS BERDASARKAN NAMA
+        // PROSES PENCARIAN BANYAK ROLE OTOMATIS (VERSI PINTAR & AMAN)
         if (rawRoles) {
-            const roleNames = rawRoles.split(',').map(r => r.trim().toLowerCase());
+            // Memisahkan koma, menghapus spasi luar, dan menghilangkan simbol @ jika staf tidak sengaja mengetiknya
+            const roleNames = rawRoles.split(',').map(r => r.trim().replace(/^@/, '').toLowerCase());
             const cacheRoles = guild.roles.cache;
             
             roleNames.forEach(name => {
+                if (!name) return;
                 const foundRole = cacheRoles.find(r => r.name.toLowerCase() === name);
                 if (foundRole) {
                     tagString += `<@&${foundRole.id}> `;
@@ -67,12 +69,13 @@ async function handleSay(interaction) {
             });
         }
 
-        // PROSES PENCARIAN BANYAK USER OTOMATIS BERDASARKAN USERNAME/NAMA
+        // PROSES PENCARIAN BANYAK USER OTOMATIS (VERSI PINTAR & AMAN)
         if (rawUsers) {
-            const userNames = rawUsers.split(',').map(u => u.trim().toLowerCase());
+            const userNames = rawUsers.split(',').map(u => u.trim().replace(/^@/, '').toLowerCase());
             const cacheMembers = guild.members.cache;
 
             userNames.forEach(name => {
+                if (!name) return;
                 const foundMember = cacheMembers.find(m => 
                     m.user.username.toLowerCase() === name || 
                     (m.nickname && m.nickname.toLowerCase() === name)
