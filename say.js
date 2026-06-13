@@ -10,7 +10,7 @@ async function handleSay(interaction) {
     const allowedRoleId = "1499605520603025516";
     const logChannelId = "1499605521416847512";
 
-    // Cek permission role
+    // Cek permission role staf
     if (!interaction.member.roles.cache.has(allowedRoleId)) {
         return interaction.reply({
             content: '❌ Kamu tidak memiliki izin untuk menggunakan command ini.',
@@ -18,53 +18,91 @@ async function handleSay(interaction) {
         });
     }
 
-    // Ambil channel pilihan sebelum membuka pop-up modal
     const targetChannel = interaction.options.getChannel('channel') || interaction.channel;
+    const rawRoles = interaction.options.getString('tag-roles');
+    const rawUsers = interaction.options.getString('tag-users');
+    const guild = interaction.guild;
+
+    // Buat ID unik modal
+    const uniqueId = `say_modal_${Date.now()}`;
 
     // 1. BUAT JENDELA POP-UP (MODAL)
     const modal = new ModalBuilder()
-        .setCustomId(`say_modal_${targetChannel.id}`)
+        .setCustomId(uniqueId)
         .setTitle('Kirim Pesan Manual');
 
-    // 2. BUAT KOLOM INPUT TEKS PARAGRAF (BISA ENTER KEBAWAH)
     const messageInput = new TextInputBuilder()
         .setCustomId('say_message_input')
         .setLabel('Tulis Pesan Anda')
-        .setStyle(TextInputStyle.Paragraph) // Paragraph membuat kotak teks besar & mendukung enter
-        .setPlaceholder('Tulis pesan di sini...\nBisa tekan enter langsung ke bawah tanpa \\n')
+        .setStyle(TextInputStyle.Paragraph)
+        .setPlaceholder('Tulis pesan di sini... (Bisa langsung tekan enter ke bawah)')
         .setRequired(true);
 
     const firstActionRow = new ActionRowBuilder().addComponents(messageInput);
     modal.addComponents(firstActionRow);
 
-    // 3. TAMPILKAN POP-UP KE LAYAR USER
+    // Tampilkan pop-up modal
     await interaction.showModal(modal);
 
-    // 4. TUNGGU DAN PROSES RESPONS INPUT DARI POP-UP TERSEBUT
+    // 2. TUNGGU RESPONS MODAL
     try {
         const submitted = await interaction.awaitModalSubmit({
-            time: 60000, // Batas waktu pengisian 1 menit
-            filter: i => i.customId === `say_modal_${targetChannel.id}`
+            time: 60000,
+            filter: i => i.customId === uniqueId
         });
 
-        const message = submitted.fields.getTextInputValue('say_message_input');
+        let finalMessage = submitted.fields.getTextInputValue('say_message_input');
+        let tagString = '';
 
-        // Beri tanda pemrosesan sukses pada jendela pop-up
+        // PROSES PENCARIAN BANYAK ROLE OTOMATIS BERDASARKAN NAMA
+        if (rawRoles) {
+            const roleNames = rawRoles.split(',').map(r => r.trim().toLowerCase());
+            const cacheRoles = guild.roles.cache;
+            
+            roleNames.forEach(name => {
+                const foundRole = cacheRoles.find(r => r.name.toLowerCase() === name);
+                if (foundRole) {
+                    tagString += `<@&${foundRole.id}> `;
+                }
+            });
+        }
+
+        // PROSES PENCARIAN BANYAK USER OTOMATIS BERDASARKAN USERNAME/NAMA
+        if (rawUsers) {
+            const userNames = rawUsers.split(',').map(u => u.trim().toLowerCase());
+            const cacheMembers = guild.members.cache;
+
+            userNames.forEach(name => {
+                const foundMember = cacheMembers.find(m => 
+                    m.user.username.toLowerCase() === name || 
+                    (m.nickname && m.nickname.toLowerCase() === name)
+                );
+                if (foundMember) {
+                    tagString += `<@${foundMember.id}> `;
+                }
+            });
+        }
+
+        // Gabungkan tag ke pesan jika ada yang cocok
+        if (tagString) {
+            finalMessage += `\n\n${tagString.trim()}`;
+        }
+
         await submitted.deferReply({ ephemeral: true });
 
-        // Kirim teks murni hasil enter ke channel tujuan
-        await targetChannel.send({ content: message });
+        // Kirim hasil pesan akhir ke channel tujuan
+        await targetChannel.send({ content: finalMessage });
 
-        // Kirim Log ke Log Channel menggunakan Embed
+        // Kirim Log ke Log Channel
         const logChannel = interaction.client.channels.cache.get(logChannelId);
         if (logChannel) {
             const logEmbed = new EmbedBuilder()
                 .setTitle('📢 Command /say Digunakan')
                 .setColor(0xffcc00)
                 .addFields(
-                    { name: 'User', value: `<@${interaction.user.id}>`, inline: true },
+                    { name: 'User Staf', value: `<@${interaction.user.id}>`, inline: true },
                     { name: 'Target Channel', value: `<#${targetChannel.id}>`, inline: true },
-                    { name: 'Pesan', value: message.substring(0, 1024) || '-' }
+                    { name: 'Pesan Terkirim', value: finalMessage.substring(0, 1024) || '-' }
                 )
                 .setTimestamp();
 
@@ -72,12 +110,11 @@ async function handleSay(interaction) {
         }
 
         return submitted.editReply({
-            content: `✅ Pesan paragraf berhasil dikirim ke <#${targetChannel.id}>!`
+            content: `✅ Pesan berhasil dikirim ke <#${targetChannel.id}>!`
         });
 
     } catch (err) {
-        // Jika eror karena waktu habis atau kegagalan pengiriman
-        console.error(err);
+        console.error('Terjadi kesalahan:', err);
     }
 }
 
