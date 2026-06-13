@@ -152,21 +152,31 @@ const rest = new REST({ version: '10' }).setToken(CONFIG.TOKEN);
     }
 })();
 
-// Import handler add-fng
+// --- IMPORT HANDLER FILE TERPISAH ---
 const { handleAddFng } = require('./add-fng');
+const { handleSay } = require('./say'); // 👈 BARU: Menghubungkan file say.js
 
 // Event: Interaction (Slash Commands)
 client.on('interactionCreate', async (interaction) => {
     if (!interaction.isChatInputCommand()) return;
 
     try {
+        // 👈 BARU: Memicu fungsi dari file say.js saat command dijalankan
+        if (interaction.commandName === 'say') {
+            return await handleSay(interaction);
+        }
+
         if (interaction.commandName === 'add-fng') {
             return await handleAddFng(interaction);
         }
     } catch (error) {
         console.error('❌ Error:', error);
         try {
-            await interaction.editReply({ content: `❌ Error: ${error.message}` });
+            if (interaction.deferred || interaction.replied) {
+                await interaction.editReply({ content: `❌ Error: ${error.message}` });
+            } else {
+                await interaction.reply({ content: `❌ Error: ${error.message}`, ephemeral: true });
+            }
         } catch (e) {
             console.error('Gagal mengirim error reply:', e);
         }
