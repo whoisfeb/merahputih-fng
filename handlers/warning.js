@@ -1,4 +1,4 @@
-const TARGET_CHANNEL_ID = '1515008339904434427';
+const TARGET_CHANNEL_ID = '1499605521630625929';
 
 // Fungsi bantuan untuk memberikan jeda waktu (delay)
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
