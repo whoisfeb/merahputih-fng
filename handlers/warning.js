@@ -12,7 +12,7 @@ async function handleWarning(message) {
     const hasFactionLogs = /Faction\s*Logs/i.test(content);
     if (!hasFactionLogs) return;
 
-    // 2. PERBAIKAN: Isolasi baris yang mengandung kata "Logs" secara akurat dengan regex .test()
+    // 2. Isolasi baris yang mengandung kata "Logs" secara akurat
     const lines = content.split('\n');
     const logLine = lines.find(line => /^logs\s*:/i.test(line.trim()));
     if (!logLine) return;
@@ -29,24 +29,25 @@ async function handleWarning(message) {
     const mentionedRoles = message.mentions.roles;
     if (mentionedRoles.size === 0) return;
 
+    // Regex global untuk mendeteksi dan menghapus segala bentuk format (X/3)
+    const warningRegex = /\s*\(\d+\/3\)/g;
+
     // Proses setiap role secara bergantian
     for (const [roleId, role] of mentionedRoles) {
         try {
-            // Selalu ambil nama asli role dari server Discord
-            let currentName = role.name;
-            let cleanName = currentName;
+            // Ambil nama dari server Discord dan bersihkan dari teks (X/3) lama
+            let rawName = role.name;
+            let cleanName = rawName.replace(warningRegex, '').trim();
             let currentWarning = 0;
 
-            // Cari tahu apakah nama role saat ini sudah punya format (X/3)
-            const warningRegex = /\((\d+)\/3\)/;
-            const match = currentName.match(warningRegex);
-
+            // Cari tahu angka warning lama dari nama asli role sebelum dihapus
+            const match = rawName.match(/\((\d+)\/3\)/);
             if (match) {
-                currentWarning = parseInt(match, 10);
-                cleanName = currentName.replace(warningRegex, '').trim();
-            } else {
-                cleanName = currentName.trim();
+                currentWarning = parseInt(match[1], 10);
             }
+
+            // Jika hasil ekstraksi angka warning lama rusak/bukan angka, reset ke 0
+            if (isNaN(currentWarning)) currentWarning = 0;
 
             // Hitung nilai warning baru
             let nextWarning = currentWarning;
@@ -57,6 +58,9 @@ async function handleWarning(message) {
                 nextWarning = currentWarning + strikeAmount;
                 if (nextWarning > 3) nextWarning = 3; // Maksimal 3
             }
+
+            // Jika angka warning baru entah bagaimana menjadi NaN, amankan ke status aman
+            if (isNaN(nextWarning)) nextWarning = isDecrease ? 0 : 1;
 
             const newRoleName = `${cleanName} (${nextWarning}/3)`;
 
