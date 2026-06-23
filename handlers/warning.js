@@ -42,7 +42,7 @@ async function handleWarning(message) {
             const match = currentName.match(warningRegex);
 
             if (match) {
-                currentWarning = parseInt(match[1], 10);
+                currentWarning = parseInt(match, 10);
                 cleanName = currentName.replace(warningRegex, '').trim();
             } else {
                 cleanName = currentName.trim();
@@ -64,7 +64,11 @@ async function handleWarning(message) {
             const actionReason = isDecrease ? `Strike -${strikeAmount}` : `Strike +${strikeAmount}`;
             await role.setName(newRoleName, `Otomatisasi Faction Logs - ${actionReason}`);
             
-            await message.channel.send(`✅ Berhasil memperbarui role **${cleanName}** menjadi **${newRoleName}**.`);
+            // 👈 BAGIAN YANG DIUBAH: Pesan sukses hapus otomatis dalam 5 detik
+            await message.channel.send(`✅ Berhasil memperbarui role **${cleanName}** menjadi **${newRoleName}**.\n*(Pesan ini akan terhapus otomatis)*`)
+                .then(msg => {
+                    setTimeout(() => msg.delete().catch(err => console.error("Gagal menghapus pesan:", err)), 5000);
+                });
             
             // JEDA AMAN: Memberikan jeda 1.5 detik per role jika mendeteksi banyak role sekaligus
             if (mentionedRoles.size > 1) {
@@ -73,7 +77,11 @@ async function handleWarning(message) {
 
         } catch (error) {
             console.error(`Gagal mengubah nama role ID ${roleId}:`, error);
-            await message.channel.send(`❌ Gagal mengubah nama role <@&${roleId}>. Pastikan posisi Role Bot berada di atas role tersebut!`);
+            // Pesan error juga diatur hapus otomatis agar channel tetap bersih
+            await message.channel.send(`❌ Gagal mengubah nama role <@&${roleId}>. Pastikan posisi Role Bot berada di atas role tersebut!`)
+                .then(msg => {
+                    setTimeout(() => msg.delete().catch(err => console.error("Gagal menghapus pesan error:", err)), 7000);
+                });
         }
     }
 }
