@@ -166,15 +166,15 @@ const rest = new REST({ version: '10' }).setToken(CONFIG.TOKEN);
 
 // --- IMPORT HANDLER FILE TERPISAH ---
 const { handleAddFng } = require('./handlers');
-const { handleSay } = require('./handlers/say'); // 👈 BARU: Menghubungkan file say.js
+const { handleSay } = require('./handlers/say'); 
 const { handleReminder } = require('./handlers/reminder');
+const { handleWarning } = require('./handlers/warning'); // 👈 BARU: Hubungkan file warning.js
 
 // Event: Interaction (Slash Commands)
 client.on('interactionCreate', async (interaction) => {
     if (!interaction.isChatInputCommand()) return;
 
     try {
-        // 👈 BARU: Memicu fungsi dari file say.js saat command dijalankan
         if (interaction.commandName === 'say') {
             return await handleSay(interaction);
         }
@@ -203,5 +203,14 @@ client.once('clientReady', (readyClient) => {
     handleReminder(readyClient);
 });
 
+// 👈 BARU: Menambahkan Event Listener untuk membaca teks chat Faction Logs
+client.on('messageCreate', async (message) => {
+    try {
+        await handleWarning(message);
+    } catch (error) {
+        console.error('❌ Error pada handleWarning:', error);
+    }
+});
 
 client.login(CONFIG.TOKEN);
+
