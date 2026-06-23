@@ -165,8 +165,9 @@ const rest = new REST({ version: '10' }).setToken(CONFIG.TOKEN);
 })();
 
 // --- IMPORT HANDLER FILE TERPISAH ---
-const { handleAddFng } = require('./add-fng');
-const { handleSay } = require('./say'); // 👈 BARU: Menghubungkan file say.js
+const { handleAddFng } = require('./handlers');
+const { handleSay } = require('./handlers/say'); // 👈 BARU: Menghubungkan file say.js
+const { handleReminder } = require('./handlers/reminder');
 
 // Event: Interaction (Slash Commands)
 client.on('interactionCreate', async (interaction) => {
@@ -195,11 +196,12 @@ client.on('interactionCreate', async (interaction) => {
     }
 });
 
-client.login(CONFIG.TOKEN);
-
 // Mengubah 'ready' menjadi 'clientReady' untuk mengatasi Deprecation Warning
 client.once('clientReady', (readyClient) => {
     console.log(`🤖 Bot siap! Login sebagai ${readyClient.user.tag}`);
+
+    handleReminder(readyClient);
 });
+
 
 client.login(CONFIG.TOKEN);
