@@ -4,7 +4,8 @@ const TARGET_CHANNEL_ID = '1499605521630625929';
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 async function handleWarning(message) {
-    if (message.author.bot || message.channel.id !== TARGET_CHANNEL_ID) return;
+    if (message.channel.id !== TARGET_CHANNEL_ID) return;
+
 
     const content = message.content;
 
