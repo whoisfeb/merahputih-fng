@@ -165,7 +165,7 @@ const rest = new REST({ version: '10' }).setToken(CONFIG.TOKEN);
 })();
 
 // --- IMPORT HANDLER FILE TERPISAH ---
-const { handleAddFng } = require('./handlers');
+const { handleAddFng } = require('./handlers/add-fng');
 const { handleSay } = require('./handlers/say'); 
 const { handleReminder } = require('./handlers/reminder');
 const { handleWarning } = require('./handlers/warning'); // 👈 BARU: Hubungkan file warning.js
