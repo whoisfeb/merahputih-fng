@@ -12,16 +12,18 @@ async function handleWarning(message) {
     const hasFactionLogs = /Faction\s*Logs/i.test(content);
     if (!hasFactionLogs) return;
 
-    // 2. REGEX ULTRA FLEKSIBEL: Mendeteksi penambahan (+) atau pengurangan (-) strike beserta angkanya
-    // Pola ini mencari kata "Strike" dan mendeteksi apakah ada simbol minus (-) atau plus (+) di sekitar angka
-    const strikeRegex = /(?:([+-])\s*Strike\s*|Strike\s*([+-]?)\s*)(\d+)/i;
-    const strikeMatch = content.match(strikeRegex);
-    if (!strikeMatch) return;
+    // 2. Isolasi baris yang hanya berisi kata "Logs :" agar pencarian angka strike tidak salah fokus
+    const lines = content.split('\n');
+    const logLine = lines.find(line => line.toLowerCase().includes('logs\s*:') || line.toLowerCase().startsWith('logs'));
+    if (!logLine) return;
 
-    // Tentukan apakah ini operasi pengurangan atau penambahan
-    // Memeriksa simbol dari grup penangkap regex [+-]
-    const isDecrease = (strikeMatch[1] === '-' || strikeMatch[2] === '-');
-    const strikeAmount = parseInt(strikeMatch[3], 10);
+    // 3. Ambil angka strike dari baris tersebut secara presisi
+    const digitMatch = logLine.match(/\d+/);
+    if (!digitMatch) return;
+    const strikeAmount = parseInt(digitMatch[0], 10);
+
+    // 4. Cek apakah ada tanda minus (-) di baris log tersebut untuk menentukan pengurangan
+    const isDecrease = logLine.includes('-');
 
     // Ambil semua role yang di-tag dalam pesan
     const mentionedRoles = message.mentions.roles;
@@ -30,6 +32,7 @@ async function handleWarning(message) {
     // Proses setiap role secara bergantian
     for (const [roleId, role] of mentionedRoles) {
         try {
+            // Mengambil nama asli role langsung dari server Discord (Aman dari teks chat)
             let currentName = role.name;
             let cleanName = currentName;
             let currentWarning = 0;
@@ -39,7 +42,7 @@ async function handleWarning(message) {
             const match = currentName.match(warningRegex);
 
             if (match) {
-                currentWarning = parseInt(match, 10);
+                currentWarning = parseInt(match[1], 10);
                 cleanName = currentName.replace(warningRegex, '').trim();
             } else {
                 cleanName = currentName.trim();
