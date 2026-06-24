@@ -1,8 +1,8 @@
 const { EmbedBuilder } = require('discord.js');
 
 // Konfigurasi ID Internal
-const ALLOWED_ROLE_IDS = ['1480248506655703101']; 
-const LOG_CHANNEL_ID = '1483432966163136584';
+const ALLOWED_ROLE_IDS = ['1499605520603025516']; 
+const LOG_CHANNEL_ID = '1515008339904434427';
 
 /**
  * Fungsi eksekusi utama handler perintah setmember
