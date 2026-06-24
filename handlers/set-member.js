@@ -15,9 +15,8 @@ async function handleSetMember(interaction) {
     );
 
     if (!hasAccess) {
-        return interaction.reply({
-            content: '❌ Kamu tidak memiliki akses menggunakan command ini.',
-            ephemeral: true
+        return interaction.editReply({ // 👈 DIPERBAIKI: Menggunakan editReply karena sudah di-defer di index.js
+            content: '❌ Kamu tidak memiliki akses menggunakan command ini.'
         });
     }
 
@@ -37,9 +36,8 @@ async function handleSetMember(interaction) {
     const member = await interaction.guild.members.fetch(targetUser.id).catch(() => null);
 
     if (!member) {
-        return interaction.reply({
-            content: '❌ Member tidak ditemukan di server ini.',
-            ephemeral: true
+        return interaction.editReply({ // 👈 DIPERBAIKI: Menggunakan editReply
+            content: '❌ Member tidak ditemukan di server ini.'
         });
     }
 
@@ -90,9 +88,8 @@ async function handleSetMember(interaction) {
             .setTimestamp();
 
         // 8. Kirim Respons Privat ke Staff/Eksekutor
-        await interaction.reply({
-            embeds: [embed],
-            ephemeral: true
+        await interaction.editReply({ // 👈 DIPERBAIKI: Menggunakan editReply (Otomatis privat/ephemeral mengikuti defer di index.js)
+            embeds: [embed]
         });
 
         // 9. Kirim Salinan Logs ke Channel Log Server (Gunakan fetch jika cache kosong)
@@ -110,15 +107,11 @@ async function handleSetMember(interaction) {
 
         // Penanganan error interaksi yang aman
         const errorMessage = {
-            content: `❌ Terjadi kesalahan:\n\`${error.message}\``,
-            ephemeral: true
+            content: `❌ Terjadi kesalahan:\n\`${error.message}\``
         };
 
-        if (interaction.replied || interaction.deferred) {
-            return interaction.followUp(errorMessage).catch(() => {});
-        } else {
-            return interaction.reply(errorMessage).catch(() => {});
-        }
+        // Menggunakan editReply karena interaksi dipastikan sudah di-defer di index.js
+        return interaction.editReply(errorMessage).catch(() => {});
     }
 }
 

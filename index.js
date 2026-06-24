@@ -201,6 +201,14 @@ client.on('interactionCreate', async (interaction) => {
         if (interaction.commandName === 'add-fng') {
             return await handleAddFng(interaction);
         }
+
+        // 📋 BARU: Pemicu untuk menjalankan perintah setmember
+        if (interaction.commandName === 'setmember') {
+            // Tunda reply secara privat (ephemeral) agar bot punya waktu memproses role
+            await interaction.deferReply({ ephemeral: true });
+            return await handleSetMember(interaction);
+        }
+
     } catch (error) {
         console.error('❌ Error:', error);
         try {
@@ -221,6 +229,7 @@ client.once('clientReady', (readyClient) => {
 
     handleReminder(readyClient);
 });
+
 
 // 👈 BARU: Menambahkan Event Listener untuk membaca teks chat Faction Logs
 client.on('messageCreate', async (message) => {
