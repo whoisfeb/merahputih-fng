@@ -141,7 +141,7 @@ const commands = [
     },
     
     // 👈 BARU: Mengambil struktur data command otomatis dari handlers/setmember.js
-    require('./handlers/setmember').data.toJSON()
+    require('./handlers/set-member').data.toJSON()
 
 ];
 
