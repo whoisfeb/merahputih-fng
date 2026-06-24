@@ -38,7 +38,7 @@ function sendLog(guild, embed) {
 // --- REGISTER SLASH COMMANDS ---
 const commands = [
 
-        {
+    {
         name: 'say',
         description: 'Kirim pesan manual (khusus role tertentu)',
         options: [
@@ -122,7 +122,6 @@ const commands = [
             { name: 'reason', type: 3, description: 'Alasan penghapusan kanal', required: false },
         ],
     },
-    // Di dalam array commands = [ ... ] pada file index.js Anda:
     {
         name: 'add-fng',
         description: 'Membuat FNG baru dengan role otomatis + 2 channel (about & activity)',
@@ -140,8 +139,12 @@ const commands = [
             { name: 'permission2', type: 3, description: 'Izin untuk role kedua', required: false, choices: [{ name: 'Lihat Kanal (View)', value: 'VIEW' }, { name: 'Kirim Pesan (Send)', value: 'SEND' }, { name: 'Kanal Privat (Private)', value: 'PRIVATE' }] },
         ],
     },
+    
+    // 👈 BARU: Mengambil struktur data command otomatis dari handlers/setmember.js
+    require('./handlers/setmember').data.toJSON()
 
 ];
+
 
 // Deploy slash commands ke Discord API
 const rest = new REST({ version: '10' }).setToken(CONFIG.TOKEN);
@@ -169,6 +172,7 @@ const { handleAddFng } = require('./handlers/add-fng');
 const { handleSay } = require('./handlers/say'); 
 const { handleReminder } = require('./handlers/reminder');
 const { handleWarning } = require('./handlers/warning'); // 👈 BARU: Hubungkan file warning.js
+const { handleSetMember } = require('./handlers/set-member');
 
 // Event: Interaction (Slash Commands)
 client.on('interactionCreate', async (interaction) => {
