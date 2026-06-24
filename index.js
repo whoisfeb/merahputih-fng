@@ -172,7 +172,9 @@ const { handleAddFng } = require('./handlers/add-fng');
 const { handleSay } = require('./handlers/say'); 
 const { handleReminder } = require('./handlers/reminder');
 const { handleWarning } = require('./handlers/warning'); // 👈 BARU: Hubungkan file warning.js
-const { handleSetMember } = require('./handlers/set-member');
+// Pastikan menggunakan tanda hubung '-' sesuai nama berkas asli Anda
+const { handleSetMember } = require('./handlers/set-member'); 
+
 
 // Event: Interaction (Slash Commands)
 client.on('interactionCreate', async (interaction) => {

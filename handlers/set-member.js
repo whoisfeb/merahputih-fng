@@ -105,7 +105,9 @@ async function handleSetMember(interaction) {
             .addFields(
                 {
                     name: 'Member',
-                    value: `${targetUser.tag} (${targetUser.id})`
+                    value: targetUser.discriminator && targetUser.discriminator !== '0' 
+                        ? `${targetUser.username}#${targetUser.discriminator} (${targetUser.id})`
+                        : `${targetUser.username} (${targetUser.id})`
                 },
                 {
                     name: 'Nickname Baru',
@@ -117,7 +119,9 @@ async function handleSetMember(interaction) {
                 },
                 {
                     name: 'Dilakukan Oleh',
-                    value: `${interaction.user.tag}`
+                    value: interaction.user.discriminator && interaction.user.discriminator !== '0'
+                        ? `${interaction.user.username}#${interaction.user.discriminator}`
+                        : `${interaction.user.username}`
                 }
             )
             .setTimestamp();
@@ -128,8 +132,10 @@ async function handleSetMember(interaction) {
             ephemeral: true
         });
 
-        // Kirim Salinan Logs ke Channel Log Server
-        const logChannel = interaction.guild.channels.cache.get(LOG_CHANNEL_ID);
+        // Kirim Salinan Logs ke Channel Log Server (Gunakan fetch jika cache kosong)
+        const logChannel = interaction.guild.channels.cache.get(LOG_CHANNEL_ID) 
+            || await interaction.guild.channels.fetch(LOG_CHANNEL_ID).catch(() => null);
+            
         if (logChannel) {
             await logChannel.send({
                 embeds: [embed]
