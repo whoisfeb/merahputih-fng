@@ -140,10 +140,23 @@ const commands = [
         ],
     },
     
-    // 👈 BARU: Mengambil struktur data command otomatis dari handlers/setmember.js
-    require('./handlers/set-member').data.toJSON()
+    // 👈 BARU: Menaruh struktur /setmember langsung di dalam array index.js
+    {
+        name: 'setmember',
+        description: 'Mengubah nama pengguna dan memberikan role sekaligus.',
+        options: [
+            { name: 'user', type: 6, description: 'User yang akan diubah', required: true },
+            { name: 'nickname', type: 3, description: 'Nickname baru', required: true },
+            { name: 'role_wajib', type: 8, description: 'Role wajib', required: true },
+            { name: 'role_opsional_1', type: 8, description: 'Role opsional 1', required: false },
+            { name: 'role_opsional_2', type: 8, description: 'Role opsional 2', required: false },
+            { name: 'role_opsional_3', type: 8, description: 'Role opsional 3', required: false },
+            { name: 'role_opsional_4', type: 8, description: 'Role opsional 4', required: false }
+        ]
+    }
 
 ];
+
 
 
 // Deploy slash commands ke Discord API

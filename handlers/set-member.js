@@ -1,52 +1,15 @@
-const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-
-// 1. DATA VISUAL MENU SLASH COMMAND
-const data = new SlashCommandBuilder()
-    .setName('setmember')
-    .setDescription('Mengubah nama pengguna dan memberikan role sekaligus.')
-    .addUserOption(option =>
-        option
-            .setName('user')
-            .setDescription('User yang akan diubah')
-            .setRequired(true))
-    .addStringOption(option =>
-        option
-            .setName('nickname')
-            .setDescription('Nickname baru')
-            .setRequired(true))
-    .addRoleOption(option =>
-        option
-            .setName('role_wajib')
-            .setDescription('Role wajib')
-            .setRequired(true))
-    .addRoleOption(option =>
-        option
-            .setName('role_opsional_1')
-            .setDescription('Role opsional 1')
-            .setRequired(false))
-    .addRoleOption(option =>
-        option
-            .setName('role_opsional_2')
-            .setDescription('Role opsional 2')
-            .setRequired(false))
-    .addRoleOption(option =>
-        option
-            .setName('role_opsional_3')
-            .setDescription('Role opsional 3')
-            .setRequired(false))
-    .addRoleOption(option =>
-        option
-            .setName('role_opsional_4')
-            .setDescription('Role opsional 4')
-            .setRequired(false));
+const { EmbedBuilder } = require('discord.js');
 
 // Konfigurasi ID Internal
 const ALLOWED_ROLE_IDS = ['1480248506655703101']; 
 const LOG_CHANNEL_ID = '1483432966163136584';
 
-// 2. FUNGSI LOGIKA / PROSES UTAMA
+/**
+ * Fungsi eksekusi utama handler perintah setmember
+ * @param {import('discord.js').CommandInteraction} interaction 
+ */
 async function handleSetMember(interaction) {
-    // Cek Akses Role Pengguna Command
+    // 1. Cek Akses Role Pengguna Command
     const hasAccess = interaction.member.roles.cache.some(role =>
         ALLOWED_ROLE_IDS.includes(role.id)
     );
@@ -58,7 +21,7 @@ async function handleSetMember(interaction) {
         });
     }
 
-    // Ambil Input Data dari Interaksi Slash Command
+    // 2. Ambil Input Data dari Interaksi Slash Command
     const targetUser = interaction.options.getUser('user');
     const nickname = interaction.options.getString('nickname');
     const requiredRole = interaction.options.getRole('role_wajib');
@@ -70,7 +33,7 @@ async function handleSetMember(interaction) {
         interaction.options.getRole('role_opsional_4')
     ];
 
-    // Cari Member di Server Guild
+    // 3. Cari Member di Server Guild
     const member = await interaction.guild.members.fetch(targetUser.id).catch(() => null);
 
     if (!member) {
@@ -81,10 +44,10 @@ async function handleSetMember(interaction) {
     }
 
     try {
-        // Proses Perubahan Nickname
+        // 4. Proses Perubahan Nickname
         await member.setNickname(nickname);
 
-        // Kumpulkan Seluruh Role ID (Wajib + Opsional)
+        // 5. Kumpulkan Seluruh Role ID (Wajib + Opsional)
         const rolesToApply = [requiredRole.id];
         const rolesAddedLog = [requiredRole];
 
@@ -95,10 +58,10 @@ async function handleSetMember(interaction) {
             }
         }
 
-        // Pasang Semua Role Sekaligus (Menghindari Limit API Discord)
+        // 6. Pasang Semua Role Sekaligus (Menghindari Limit API Discord)
         await member.roles.add(rolesToApply);
 
-        // Konstruksi Log Berbentuk Embed
+        // 7. Konstruksi Log Berbentuk Embed (Mendukung Username Baru Discord)
         const embed = new EmbedBuilder()
             .setColor('Green')
             .setTitle('✅ Logs Success Update User')
@@ -126,13 +89,13 @@ async function handleSetMember(interaction) {
             )
             .setTimestamp();
 
-        // Kirim Respons Privat ke Staff/Eksekutor
+        // 8. Kirim Respons Privat ke Staff/Eksekutor
         await interaction.reply({
             embeds: [embed],
             ephemeral: true
         });
 
-        // Kirim Salinan Logs ke Channel Log Server (Gunakan fetch jika cache kosong)
+        // 9. Kirim Salinan Logs ke Channel Log Server (Gunakan fetch jika cache kosong)
         const logChannel = interaction.guild.channels.cache.get(LOG_CHANNEL_ID) 
             || await interaction.guild.channels.fetch(LOG_CHANNEL_ID).catch(() => null);
             
@@ -159,5 +122,5 @@ async function handleSetMember(interaction) {
     }
 }
 
-// 3. EKSPORT DATA DAN FUNGSINYA SEKALIGUS
-module.exports = { data, handleSetMember };
+// 3. HANYA EKSPORT FUNGSINYA SAJA (Karena data menu sudah ada di index.js)
+module.exports = { handleSetMember };
