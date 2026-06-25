@@ -3,56 +3,17 @@ const {
     TextInputBuilder, 
     TextInputStyle, 
     ActionRowBuilder,
-    EmbedBuilder,      // Ditambahkan untuk membuat tampilan pesan
-    ButtonBuilder,     // Ditambahkan untuk membuat komponen tombol
-    ButtonStyle,       // Ditambahkan untuk mewarnai tombol
-    PermissionFlagsBits // Ditambahkan untuk validasi izin Admin
+    EmbedBuilder,      
+    ButtonBuilder,     
+    ButtonStyle,       
+    PermissionFlagsBits 
 } = require('discord.js');
 
-module.exports = (client) => {
+// 1. FUNGSI UTAMA UNTUK MENANGANI INTERAKSI (Dipanggil di clientReady)
+function handleVerify(client) {
     // KONFIGURASI: Menggunakan ID Role Citizen Anda
     const CITIZEN_ROLE_ID = '1499605520603025512'; 
-    const PREFIX = '!'; // Prefix untuk perintah teks
 
-    // 1. HANDLER PERINTAH TEKS (!setup-verify)
-    client.on('messageCreate', async (message) => {
-        // Abaikan jika pesan dari bot atau tidak diawali dengan prefix
-        if (message.author.bot || !message.content.startsWith(PREFIX)) return;
-
-        const args = message.content.slice(PREFIX.length).trim().split(/+/);
-        const command = args.shift().toLowerCase();
-
-        if (command === 'setup-verify') {
-            // Validasi apakah pengguna adalah Administrator
-            if (!message.member.permissions.has(PermissionFlagsBits.Administrator)) {
-                return message.reply('❌ Anda tidak memiliki izin untuk menggunakan perintah ini.')
-                    .then(msg => setTimeout(() => msg.delete().catch(() => null), 5000));
-            }
-
-            // Hapus pesan pemicu !setup-verify agar channel tetap rapi
-            await message.delete().catch(() => null);
-
-            // Membuat pesan Embed verifikasi
-            const embed = new EmbedBuilder()
-                .setTitle('🔐 Verifikasi Server')
-                .setDescription('Silakan klik tombol di bawah untuk mengisi formulir nama dan masuk ke server.')
-                .setColor('#2f3136')
-                .setFooter({ text: 'Pastikan mengisi dengan nama asli Anda.' });
-
-            // Membuat tombol "Verify Me"
-            const row = new ActionRowBuilder().addComponents(
-                new ButtonBuilder()
-                    .setCustomId('btn_verify')
-                    .setLabel('Verify Me')
-                    .setStyle(ButtonStyle.Success)
-            );
-
-            // Kirim pesan ke channel tempat perintah diketik
-            await message.channel.send({ embeds: [embed], components: [row] });
-        }
-    });
-
-    // 2. HANDLER INTERAKSI (Klik Tombol & Kirim Form)
     client.on('interactionCreate', async (interaction) => {
         
         // JIKA USER KLIK TOMBOL VERIFY (Memunculkan Popup Form)
@@ -136,4 +97,59 @@ module.exports = (client) => {
             }
         }
     });
-};
+}
+
+// 2. FUNGSI UNTUK MENANGANI PERINTAH TEKS !setup-verify (Dipanggil di messageCreate)
+async function handleVerifyCommand(message) {
+    const PREFIX = '!'; // Prefix untuk perintah teks
+    
+    // KONFIGURASI: Masukkan ID Role Admin Anda di dalam array ini (bisa lebih dari satu)
+    const ALLOWED_ADMIN_ROLES = [
+        '1499605520603025516'
+    ]; 
+
+    // Abaikan jika pesan dari bot atau tidak diawali dengan prefix
+    if (message.author.bot || !message.content.startsWith(PREFIX)) return;
+
+    // Perbaikan Regex: Menggunakan /\s+/ untuk memisahkan argumen berbasis spasi
+    const args = message.content.slice(PREFIX.length).trim().split(/\s+/);
+    const command = args.shift().toLowerCase();
+
+    if (command === 'setup-verify') {
+        // Cek 1: Apakah punya izin Administrator global?
+        const hasAdminPermission = message.member.permissions.has(PermissionFlagsBits.Administrator);
+        
+        // Cek 2: Apakah memiliki salah satu Role Admin yang diizinkan di atas?
+        const hasAdminRole = message.member.roles.cache.some(role => ALLOWED_ADMIN_ROLES.includes(role.id));
+
+        // Jika tidak memiliki keduanya, tolak perintahnya
+        if (!hasAdminPermission && !hasAdminRole) {
+            return message.reply('❌ Anda tidak memiliki izin atau role yang tepat untuk menggunakan perintah ini.')
+                .then(msg => setTimeout(() => msg.delete().catch(() => null), 5000));
+        }
+
+        // Hapus pesan pemicu !setup-verify agar channel tetap rapi
+        await message.delete().catch(() => null);
+
+        // Membuat pesan Embed verifikasi
+        const embed = new EmbedBuilder()
+            .setTitle('🔐 Verifikasi Server')
+            .setDescription('Silakan klik tombol di bawah untuk mengisi formulir nama dan masuk ke server.')
+            .setColor('#2f3136')
+            .setFooter({ text: 'Pastikan mengisi dengan nama asli Anda.' });
+
+        // Membuat tombol "Verify Me"
+        const row = new ActionRowBuilder().addComponents(
+            new ButtonBuilder()
+                .setCustomId('btn_verify')
+                .setLabel('Verify Me')
+                .setStyle(ButtonStyle.Success)
+        );
+
+        // Kirim pesan ke channel tempat perintah diketik
+        await message.channel.send({ embeds: [embed], components: [row] });
+    }
+}
+
+// Ekspor kedua fungsi agar sesuai dengan struktur destrukturisasi di index.js
+module.exports = { handleVerify, handleVerifyCommand };
