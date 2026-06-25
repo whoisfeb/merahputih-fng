@@ -134,7 +134,7 @@ async function handleVerifyCommand(message) {
             .setTitle('🔐 Verifikasi Server')
             .setDescription('Silahkan klik tombol dibawah untuk mendapatkan role.')
             .setColor('#2f3136')
-            .setFooter({ text: 'Pastikan mengisi dengan nama asli Anda.' });
+            .setFooter({ text: 'Pastikan mengisi dengan nama karakter anda.' });
 
         // Membuat tombol "Verify Me"
         const row = new ActionRowBuilder().addComponents(
