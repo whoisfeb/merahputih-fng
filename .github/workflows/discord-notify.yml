@@ -16,7 +16,6 @@ jobs:
 
       - name: Kirim pesan ke Discord mirip GitHub log
         env:
-          # PERBAIKAN: Menyelaraskan nama variabel dengan Secret asli Anda
           CHANGELOGS_DISCORD: ${{ secrets.CHANGELOGS_DISCORD }}
         run: |
           # 1. Menentukan rentang commit yang baru di-push
@@ -31,7 +30,6 @@ jobs:
 
           # 2. Ambil data pendukung
           AUTHOR_AVATAR="$(curl -s https://github.com{{ github.actor }} | grep avatar_url | cut -d '"' -f4)"
-          REPO_NAME="${{ github.repository }}"
           BRANCH="${{ github.ref_name }}"
           
           # 3. Hitung jumlah commit dalam push ini
@@ -40,7 +38,7 @@ jobs:
           # 4. Menggunakan format git log murni teks biasa tanpa link markdown
           COMMIT_LIST=$(git log $RANGE --pretty=format:"\`%h\` %s - %an" | sed ':a;N;$!ba;s/\n/\\n/g')
 
-          # 5. Struktur JSON bersih tanpa baris URL tautan ke repositori
+          # 5. PERBAIKAN UTAMA: Mengganti teks menjadi Gangster Hytam
           PAYLOAD=$(cat <<EOF
           {
             "embeds": [{
@@ -48,7 +46,7 @@ jobs:
                 "name": "${{ github.actor }}",
                 "icon_url": "$AUTHOR_AVATAR"
               },
-              "title": "[$REPO_NAME:$BRANCH] $COMMIT_COUNT new commit(s)",
+              "title": "[Gangster Hytam:$BRANCH] $COMMIT_COUNT new commit(s)",
               "description": "$COMMIT_LIST",
               "color": 7506394
             }]
