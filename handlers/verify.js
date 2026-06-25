@@ -111,7 +111,7 @@ async function handleVerifyCommand(message) {
     // Abaikan jika pesan dari bot atau tidak diawali dengan prefix
     if (message.author.bot || !message.content.startsWith(PREFIX)) return;
 
-    // Perbaikan Regex: Menggunakan /\s+/ untuk memisahkan argumen berbasis spasi
+    // Menggunakan /\s+/ untuk memisahkan argumen berbasis spasi secara aman
     const args = message.content.slice(PREFIX.length).trim().split(/\s+/);
     const command = args.shift().toLowerCase();
 
@@ -122,19 +122,17 @@ async function handleVerifyCommand(message) {
         // Cek 2: Apakah memiliki salah satu Role Admin yang diizinkan di atas?
         const hasAdminRole = message.member.roles.cache.some(role => ALLOWED_ADMIN_ROLES.includes(role.id));
 
-        // Jika tidak memiliki keduanya, tolak perintahnya
+        // Jika tidak memiliki keduanya, tolak perintahnya dengan balasan teks biasa
         if (!hasAdminPermission && !hasAdminRole) {
-            return message.reply('❌ Anda tidak memiliki izin atau role yang tepat untuk menggunakan perintah ini.')
-                .then(msg => setTimeout(() => msg.delete().catch(() => null), 5000));
+            return message.reply('❌ Anda tidak memiliki izin atau role yang tepat untuk menggunakan perintah ini.');
         }
 
-        // Hapus pesan pemicu !setup-verify agar channel tetap rapi
-        await message.delete().catch(() => null);
+        // 💡 PERBAIKAN: Baris message.delete() DIHAPUS agar pop-up konfirmasi di layar Owner tidak muncul lagi.
 
         // Membuat pesan Embed verifikasi
         const embed = new EmbedBuilder()
             .setTitle('🔐 Verifikasi Server')
-            .setDescription('Silakan klik tombol di bawah untuk mengisi formulir nama dan masuk ke server.')
+            .setDescription('Silahkan klik tombol dibawah untuk mendapatkan role.')
             .setColor('#2f3136')
             .setFooter({ text: 'Pastikan mengisi dengan nama asli Anda.' });
 
@@ -142,7 +140,7 @@ async function handleVerifyCommand(message) {
         const row = new ActionRowBuilder().addComponents(
             new ButtonBuilder()
                 .setCustomId('btn_verify')
-                .setLabel('Verify Me')
+                .setLabel('Verify')
                 .setStyle(ButtonStyle.Success)
         );
 
