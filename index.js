@@ -184,9 +184,10 @@ const rest = new REST({ version: '10' }).setToken(CONFIG.TOKEN);
 const { handleAddFng } = require('./handlers/add-fng');
 const { handleSay } = require('./handlers/say'); 
 const { handleReminder } = require('./handlers/reminder');
-const { handleWarning } = require('./handlers/warning'); // 👈 BARU: Hubungkan file warning.js
-// Pastikan menggunakan tanda hubung '-' sesuai nama berkas asli Anda
+const { handleWarning } = require('./handlers/warning'); 
 const { handleSetMember } = require('./handlers/set-member'); 
+const { handleVerify, handleVerifyCommand } = require('./handlers/verify'); // 👈 PERBAIKAN DI SINI
+
 
 
 // Event: Interaction (Slash Commands)
@@ -228,15 +229,17 @@ client.once('clientReady', (readyClient) => {
     console.log(`🤖 Bot siap! Login sebagai ${readyClient.user.tag}`);
 
     handleReminder(readyClient);
+    handleVerify(readyClient); // 👈 BARU: Menjalankan sistem interaksi tombol & form verifikasi
 });
 
 
-// 👈 BARU: Menambahkan Event Listener untuk membaca teks chat Faction Logs
+// Menambahkan Event Listener untuk membaca teks chat Faction Logs & Perintah Setup
 client.on('messageCreate', async (message) => {
     try {
         await handleWarning(message);
+        await handleVerifyCommand(message); // 👈 BARU: Menjalankan pendeteksi perintah teks !setup-verify
     } catch (error) {
-        console.error('❌ Error pada handleWarning:', error);
+        console.error('❌ Error pada Event messageCreate:', error);
     }
 });
 
