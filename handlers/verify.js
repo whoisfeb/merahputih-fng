@@ -21,7 +21,7 @@ function handleVerify(client) {
             
             const modal = new ModalBuilder()
                 .setCustomId('modal_verify')
-                .setTitle('Formulir Verifikasi Warga');
+                .setTitle('Gangster Hytam Verification');
 
             const firstNameInput = new TextInputBuilder()
                 .setCustomId('first_name')
