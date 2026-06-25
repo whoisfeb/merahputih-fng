@@ -29,7 +29,7 @@ function handleReminder(client) { // Tidak perlu parameter CONFIG lagi
     };
 
     sendReminder();
-    setInterval(sendReminder, 3600000); // 1 jam
+    setInterval(sendReminder, 21600000); // 6 jam sekali
 }
 
 module.exports = { handleReminder };
