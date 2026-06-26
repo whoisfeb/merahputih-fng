@@ -146,59 +146,60 @@ const commands = [
     
     // 👈 BARU: Menaruh struktur /setmember langsung di dalam array index.js
     {
-        name: 'setmember',
-        description: 'Mengubah nama pengguna dengan format otomatis dan memberikan role sekaligus.',
-        options: [
-            { 
-                name: 'user', 
-                type: 6, 
-                description: 'User yang akan diubah', 
-                required: true 
-            },
-            { 
-                name: 'nama_depan', 
-                type: 3, 
-                description: 'Nama depan (Akan otomatis diformat menjadi Nama Depan | ...)', 
-                required: true 
-            },
-            { 
-                name: 'nickname', 
-                type: 3, 
-                description: 'Nickname kelanjutan (Opsional, jika kosong akan mengikuti nama depan)', 
-                required: false 
-            },
-            { 
-                name: 'role_wajib', 
-                type: 8, 
-                description: 'Role utama yang wajib diberikan', 
-                required: true 
-            },
-            { 
-                name: 'role_opsional_1', 
-                type: 8, 
-                description: 'Role opsional 1', 
-                required: false 
-            },
-            { 
-                name: 'role_opsional_2', 
-                type: 8, 
-                description: 'Role opsional 2', 
-                required: false 
-            },
-            { 
-                name: 'role_opsional_3', 
-                type: 8, 
-                description: 'Role opsional 3', 
-                required: false 
-            },
-            { 
-                name: 'role_opsional_4', 
-                type: 8, 
-                description: 'Role opsional 4', 
-                required: false 
-            }
-        ]
-    }
+    {
+    name: 'setmember',
+    description: 'Mengubah nama pengguna dengan format otomatis dan memberikan role sekaligus.',
+    options: [
+        { 
+            name: 'user', 
+            type: 6, 
+            description: 'User yang akan diubah', 
+            required: true 
+        },
+        { 
+            name: 'nama_depan', 
+            type: 3, 
+            description: 'Nama depan (Akan otomatis diformat menjadi Nama Depan | ...)', 
+            required: true 
+        },
+        { 
+            name: 'role_wajib', 
+            type: 8, 
+            description: 'Role utama yang wajib diberikan', 
+            required: true 
+        },
+        { 
+            name: 'nickname', 
+            type: 3, 
+            description: 'Nickname kelanjutan (Opsional, jika kosong akan mengikuti nama depan)', 
+            required: false 
+        },
+        { 
+            name: 'role_opsional_1', 
+            type: 8, 
+            description: 'Role opsional 1', 
+            required: false 
+        },
+        { 
+            name: 'role_opsional_2', 
+            type: 8, 
+            description: 'Role opsional 2', 
+            required: false 
+        },
+        { 
+            name: 'role_opsional_3', 
+            type: 8, 
+            description: 'Role opsional 3', 
+            required: false 
+        },
+        { 
+            name: 'role_opsional_4', 
+            type: 8, 
+            description: 'Role opsional 4', 
+            required: false 
+        }
+    ]
+}
 
 
 ];
