@@ -22,8 +22,8 @@ async function handleSetMember(interaction) {
 
     // 2. Ambil Input Data dari Interaksi Slash Command
     const targetUser = interaction.options.getUser('user');
-    const namaDepan = interaction.options.getString('nama_depan'); // 👈 BARU: Input nama depan (Wajib)
-    const customNickname = interaction.options.getString('nickname'); // 👈 BARU: Input nickname spesifik (Opsional)
+    const namaDepan = interaction.options.getString('nama_depan'); // Input nama depan (Wajib)
+    const customNickname = interaction.options.getString('nickname'); // Input nickname spesifik (Opsional)
     const requiredRole = interaction.options.getRole('role_wajib');
     
     const optionalRoles = [
@@ -43,9 +43,9 @@ async function handleSetMember(interaction) {
     }
 
     try {
-        // 4. Logika Otomatisasi Format Nickname Baru
-        // Jika nickname diisi, gunakan itu sebagai nama belakang. Jika kosong, gunakan nama depan.
-        const namaBelakang = customNickname ? customNickname : namaDepan;
+        // 4. Logika Otomatisasi Format Nickname Baru (DIPERBAIKI)
+        // Jika nickname kosong, ambil nama panggilan server saat ini, nama display Discord, atau username dasarnya.
+        const namaBelakang = customNickname ? customNickname : (member.displayName || targetUser.globalName || targetUser.username);
         const finalNickname = `${namaDepan} | ${namaBelakang}`;
 
         // Validasi batas maksimal nama panggilan Discord (32 Karakter)
