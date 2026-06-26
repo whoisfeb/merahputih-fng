@@ -131,7 +131,7 @@ async function handleVerifyCommand(message) {
 
         // Membuat pesan Embed verifikasi
         const embed = new EmbedBuilder()
-            .setTitle('🔐 Verifikasi Server')
+            .setTitle('🔐 Gangster Hytam Verification')
             .setDescription('Silahkan klik tombol dibawah untuk mendapatkan role.')
             .setColor('#2f3136')
             .setFooter({ text: 'Pastikan mengisi dengan nama karakter anda.' });
