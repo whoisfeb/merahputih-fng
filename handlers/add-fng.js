@@ -14,6 +14,7 @@ function sendLog(guild, embed) {
 // Format nama channel dari FNG name
 // Contoh: "❤ Titik Kumpul" -> "❤〢titik-kumpul"
 // Format nama channel dari FNG name
+// Format nama channel dari FNG name
 function formatChannelName(fngName) {
     const trimmed = fngName.trim();
     
@@ -28,8 +29,9 @@ function formatChannelName(fngName) {
         const restName = parts.slice(1).join('-').toLowerCase();
         return `${emoji}〢${restName}`;
     } else {
-        // Jika tanpa emoji (Contoh: "Titik Kumpul" -> "titik-kumpul")
-        return trimmed.replace(/\s+/g, '-').toLowerCase();
+        // Jika tanpa emoji (Contoh: "Titik Kumpul" -> "〢titik-kumpul")
+        const restName = trimmed.replace(/\s+/g, '-').toLowerCase();
+        return `〢${restName}`;
     }
 }
 
