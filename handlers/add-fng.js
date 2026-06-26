@@ -13,12 +13,26 @@ function sendLog(guild, embed) {
 
 // Format nama channel dari FNG name
 // Contoh: "❤ Titik Kumpul" -> "❤〢titik-kumpul"
+// Format nama channel dari FNG name
 function formatChannelName(fngName) {
-    const parts = fngName.trim().split(' ');
-    const emoji = parts[0];
-    const restName = parts.slice(1).join('-').toLowerCase();
-    return `${emoji}〢${restName}`;
+    const trimmed = fngName.trim();
+    
+    // Periksa apakah karakter pertama adalah emoji
+    const emojiRegex = /^[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F000}-\u{1F9FF}\u{1F1E6}-\u{1F1FF}]/u;
+    const hasEmoji = emojiRegex.test(trimmed);
+
+    if (hasEmoji) {
+        // Jika pakai emoji (Contoh: "❤ Titik Kumpul" -> "❤〢titik-kumpul")
+        const parts = trimmed.split(' ');
+        const emoji = parts[0];
+        const restName = parts.slice(1).join('-').toLowerCase();
+        return `${emoji}〢${restName}`;
+    } else {
+        // Jika tanpa emoji (Contoh: "Titik Kumpul" -> "titik-kumpul")
+        return trimmed.replace(/\s+/g, '-').toLowerCase();
+    }
 }
+
 
 // Validasi kategori
 function validateCategory(category, categoryName) {
