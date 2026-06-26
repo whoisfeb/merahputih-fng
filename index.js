@@ -146,7 +146,6 @@ const commands = [
     
     // 👈 BARU: Menaruh struktur /setmember langsung di dalam array index.js
     {
-    {
     name: 'setmember',
     description: 'Mengubah nama pengguna dengan format otomatis dan memberikan role sekaligus.',
     options: [
