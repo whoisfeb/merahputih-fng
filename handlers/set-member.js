@@ -15,14 +15,15 @@ async function handleSetMember(interaction) {
     );
 
     if (!hasAccess) {
-        return interaction.editReply({ // 👈 DIPERBAIKI: Menggunakan editReply karena sudah di-defer di index.js
+        return interaction.editReply({ 
             content: '❌ Kamu tidak memiliki akses menggunakan command ini.'
         });
     }
 
     // 2. Ambil Input Data dari Interaksi Slash Command
     const targetUser = interaction.options.getUser('user');
-    const nickname = interaction.options.getString('nickname');
+    const namaDepan = interaction.options.getString('nama_depan'); // 👈 BARU: Input nama depan (Wajib)
+    const customNickname = interaction.options.getString('nickname'); // 👈 BARU: Input nickname spesifik (Opsional)
     const requiredRole = interaction.options.getRole('role_wajib');
     
     const optionalRoles = [
@@ -36,14 +37,26 @@ async function handleSetMember(interaction) {
     const member = await interaction.guild.members.fetch(targetUser.id).catch(() => null);
 
     if (!member) {
-        return interaction.editReply({ // 👈 DIPERBAIKI: Menggunakan editReply
+        return interaction.editReply({ 
             content: '❌ Member tidak ditemukan di server ini.'
         });
     }
 
     try {
-        // 4. Proses Perubahan Nickname
-        await member.setNickname(nickname);
+        // 4. Logika Otomatisasi Format Nickname Baru
+        // Jika nickname diisi, gunakan itu sebagai nama belakang. Jika kosong, gunakan nama depan.
+        const namaBelakang = customNickname ? customNickname : namaDepan;
+        const finalNickname = `${namaDepan} | ${namaBelakang}`;
+
+        // Validasi batas maksimal nama panggilan Discord (32 Karakter)
+        if (finalNickname.length > 32) {
+            return interaction.editReply({
+                content: `❌ Gagal! Format nama terlalu panjang (${finalNickname.length}/32 karakter). Harap persingkat input Anda.`
+            });
+        }
+
+        // Proses Perubahan Nickname ke Server Discord
+        await member.setNickname(finalNickname);
 
         // 5. Kumpulkan Seluruh Role ID (Wajib + Opsional)
         const rolesToApply = [requiredRole.id];
@@ -72,7 +85,7 @@ async function handleSetMember(interaction) {
                 },
                 {
                     name: 'Nickname Baru',
-                    value: nickname
+                    value: finalNickname
                 },
                 {
                     name: 'Role Ditambahkan',
@@ -88,7 +101,7 @@ async function handleSetMember(interaction) {
             .setTimestamp();
 
         // 8. Kirim Respons Privat ke Staff/Eksekutor
-        await interaction.editReply({ // 👈 DIPERBAIKI: Menggunakan editReply (Otomatis privat/ephemeral mengikuti defer di index.js)
+        await interaction.editReply({ 
             embeds: [embed]
         });
 
