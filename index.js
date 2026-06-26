@@ -122,7 +122,7 @@ const commands = [
             { name: 'reason', type: 3, description: 'Alasan penghapusan kanal', required: false },
         ],
     },
-    {
+        {
         name: 'add-fng',
         description: 'Membuat FNG baru dengan role otomatis + 2 channel (about & activity)',
         options: [
@@ -130,6 +130,9 @@ const commands = [
             { name: 'category_about', type: 7, description: 'Pilih kategori untuk channel about', channel_types: [ChannelType.GuildCategory], required: true },
             { name: 'category_act', type: 7, description: 'Pilih kategori untuk channel activity', channel_types: [ChannelType.GuildCategory], required: true },
             
+            // Opsi Tambahan Baru: Warna Role (Hex Code)
+            { name: 'color', type: 3, description: 'Masukkan kode warna HEX untuk Role (Contoh: #ff0000 untuk merah, kosongkan = hijau)', required: false },
+
             // Role 1 & Permission 1
             { name: 'role1', type: 9, description: 'Role pertama yang diberi izin khusus', required: false },
             { name: 'permission1', type: 3, description: 'Izin untuk role pertama', required: false, choices: [{ name: 'Lihat Kanal (View)', value: 'VIEW' }, { name: 'Kirim Pesan (Send)', value: 'SEND' }, { name: 'Kanal Privat (Private)', value: 'PRIVATE' }] },
@@ -139,6 +142,7 @@ const commands = [
             { name: 'permission2', type: 3, description: 'Izin untuk role kedua', required: false, choices: [{ name: 'Lihat Kanal (View)', value: 'VIEW' }, { name: 'Kirim Pesan (Send)', value: 'SEND' }, { name: 'Kanal Privat (Private)', value: 'PRIVATE' }] },
         ],
     },
+
     
     // 👈 BARU: Menaruh struktur /setmember langsung di dalam array index.js
     {

@@ -197,7 +197,109 @@ async function handleAddFng(interaction) {
             }
         }
 
-        // 2. BUAT CHANNEL ABOUT (Send Messages untuk role utama)
+        async function handleAddFng(interaction) {
+    await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
+
+    try {
+        // Cek permission
+        if (!interaction.member.permissions.has(PermissionFlagsBits.ManageChannels)) {
+            return await interaction.editReply({ 
+                content: '❌ Anda tidak memiliki izin ManageChannels!' 
+            });
+        }
+
+        const fngName = interaction.options.getString('name');
+        const categoryAbout = interaction.options.getChannel('category_about');
+        const categoryAct = interaction.options.getChannel('category_act');
+
+        // Ambil opsi warna dari input perintah (Gunakan warna hijau #2ecc71 jika admin mengosongkannya)
+        const inputColor = interaction.options.getString('color') || '#2ecc71';
+
+        // Validasi kategori
+        const validateAbout = validateCategory(categoryAbout, 'Category About');
+        if (!validateAbout.valid) {
+            return await interaction.editReply({ content: validateAbout.error });
+        }
+
+        const validateAct = validateCategory(categoryAct, 'Category Activity');
+        if (!validateAct.valid) {
+            return await interaction.editReply({ content: validateAct.error });
+        }
+
+        // Format nama channel
+        const channelName = formatChannelName(fngName);
+
+        // 1. BUAT ROLE BARU DENGAN WARNA KUSTOM
+        console.log(`[ADD-FNG] Membuat role: ${fngName} dengan warna: ${inputColor}`);
+        const newRole = await interaction.guild.roles.create({
+            name: fngName,
+            color: inputColor, // <--- Mengikuti input kustom admin
+            reason: `FNG dibuat oleh ${interaction.user.tag}`
+        });
+
+        // Kumpulkan semua permission untuk channel ABOUT (Send Messages untuk role utama)
+        const aboutPermissions = [
+            {
+                id: newRole.id,
+                type: OverwriteType.Role,
+                allow: [
+                    PermissionFlagsBits.ViewChannel,
+                    PermissionFlagsBits.SendMessages,
+                    PermissionFlagsBits.ReadMessageHistory,
+                    PermissionFlagsBits.AddReactions,
+                    PermissionFlagsBits.EmbedLinks,
+                    PermissionFlagsBits.AttachFiles
+                ],
+                deny: [
+                    PermissionFlagsBits.CreatePublicThreads,
+                    PermissionFlagsBits.CreatePrivateThreads,
+                    PermissionFlagsBits.UseExternalEmojis,
+                    PermissionFlagsBits.MentionEveryone,
+                    PermissionFlagsBits.ManageMessages,
+                    PermissionFlagsBits.ManageWebhooks
+                ]
+            }
+        ];
+
+        // Kumpulkan semua permission untuk channel ACTIVITY (Send Messages untuk role utama)
+        const activityPermissions = [
+            {
+                id: newRole.id,
+                type: OverwriteType.Role,
+                allow: [
+                    PermissionFlagsBits.ViewChannel,
+                    PermissionFlagsBits.SendMessages,
+                    PermissionFlagsBits.ReadMessageHistory,
+                    PermissionFlagsBits.AddReactions,
+                    PermissionFlagsBits.EmbedLinks,
+                    PermissionFlagsBits.AttachFiles
+                ],
+                deny: [
+                    PermissionFlagsBits.CreatePublicThreads,
+                    PermissionFlagsBits.CreatePrivateThreads,
+                    PermissionFlagsBits.UseExternalEmojis,
+                    PermissionFlagsBits.MentionEveryone,
+                    PermissionFlagsBits.ManageMessages,
+                    PermissionFlagsBits.ManageWebhooks
+                ]
+            }
+        ];
+
+        // Tambahkan role1-2 dengan permission1-2 jika ada
+        let additionalRolesInfo = '';
+        for (let i = 1; i <= 2; i++) {
+            const role = interaction.options.getRole(`role${i}`);
+            const permission = interaction.options.getString(`permission${i}`);
+
+            if (role && permission) {
+                const perm = createPermissionByType(role.id, permission);
+                aboutPermissions.push(perm);
+                activityPermissions.push(perm);
+                additionalRolesInfo += `\n✅ ${role.name} - ${permission}`;
+            }
+        }
+
+        // 2. BUAT CHANNEL ABOUT 
         console.log(`[ADD-FNG] Membuat channel ABOUT: ${channelName}`);
         const channelAbout = await interaction.guild.channels.create({
             name: channelName,
@@ -208,7 +310,7 @@ async function handleAddFng(interaction) {
             reason: `Channel About untuk FNG ${fngName}`
         });
 
-        // 3. BUAT CHANNEL ACTIVITY (Send Messages untuk role utama)
+        // 3. BUAT CHANNEL ACTIVITY
         console.log(`[ADD-FNG] Membuat channel ACTIVITY: ${channelName}`);
         const channelAct = await interaction.guild.channels.create({
             name: channelName,
@@ -219,10 +321,10 @@ async function handleAddFng(interaction) {
             reason: `Channel Activity untuk FNG ${fngName}`
         });
 
-        // Buat embed untuk user
+        // Buat embed untuk user (Warna embed mengikuti input warna kustom)
         const successEmbed = new EmbedBuilder()
             .setTitle('🆕 FNG Berhasil Dibuat')
-            .setColor('#2ecc71')
+            .setColor(inputColor) // <--- Mengikuti input kustom admin
             .addFields(
                 { name: 'Nama FNG', value: `${fngName}`, inline: true },
                 { name: 'Role Utama', value: `${newRole}`, inline: true },
@@ -259,7 +361,7 @@ async function handleAddFng(interaction) {
 
         const logEmbed = new EmbedBuilder()
             .setTitle('🆕 FNG Baru Dibuat')
-            .setColor('#2ecc71')
+            .setColor(inputColor) // <--- Mengikuti input kustom admin
             .setDescription(`Sistem FNG telah membuat grup baru dengan informasi berikut:`)
             .addFields(
                 { name: 'Nama FNG', value: `${fngName}`, inline: true },
@@ -280,7 +382,7 @@ async function handleAddFng(interaction) {
         ).setTimestamp();
 
         sendLog(interaction.guild, logEmbed);
-        console.log(`[ADD-FNG] ✅ FNG ${fngName} berhasil dibuat!`);
+        console.log(`[ADD-FNG] ✅ FNG ${fngName} berhasil dibuat dengan warna ${inputColor}!`);
 
     } catch (error) {
         console.error('[ADD-FNG] ❌ Error:', error);
@@ -295,7 +397,7 @@ async function handleAddFng(interaction) {
 
         const errorEmbed = new EmbedBuilder()
             .setTitle('❌ Error: Gagal Membuat FNG')
-            .setColor('#e74c3c')
+            .setColor('#e74c3c') // Tetap merah jika terjadi error sistem
             .setDescription(`Terjadi kesalahan saat membuat FNG baru`)
             .addFields(
                 { name: 'Error Message', value: `\`\`\`${error.message}\`\`\`` },
@@ -308,5 +410,6 @@ async function handleAddFng(interaction) {
         sendLog(interaction.guild, errorEmbed);
     }
 }
+
 
 module.exports = { handleAddFng };
