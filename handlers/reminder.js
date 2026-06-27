@@ -17,19 +17,35 @@ const RANDOM_MESSAGES = [
     "Dihimbau untuk seluruh Civilian/Faction, untuk membaca <#1514716381176795266> ,<#1501619904992907346> , dan <#1499605521416847519> sebelum melakukan sebuah aktivitas di dalam kota.\n\n @everyone"
 ];
 
-function handleReminder(client) { // Tidak perlu parameter CONFIG lagi
-    console.log('[SYSTEM] Reminder Handler telah dimuat.');
+async function handleReminder(client) {
+    console.log('[SYSTEM] Checking reminder schedule (WIB)...');
 
-    const sendReminder = () => {
-        const announceChannel = client.channels.cache.get(ANNOUNCE_CHANNEL_ID);
-        if (announceChannel) {
-            const text = RANDOM_MESSAGES[Math.floor(Math.random() * RANDOM_MESSAGES.length)];
-            announceChannel.send(text).catch(err => console.error('[REMINDER ERROR]', err));
+    // 1. Dapatkan waktu saat ini di Jakarta
+    const waktuJkt = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Jakarta" }));
+    const jamSekarang = waktuJkt.getHours();
+    const menitSekarang = waktuJkt.getMinutes();
+
+    // Jadwal target jam pengiriman: 01, 07, 13, atau 19 WIB
+    const targetJam =;
+
+    // 2. Beri toleransi menit karena GitHub Actions sering delay 1-10 menit dari jadwal aslinya
+    // Jika jam sesuai DAN menit berada di kisaran 0 sampai 25, maka kirim pesan.
+    if (targetJam.includes(jamSekarang) && menitSekarang >= 0 && menitSekarang <= 25) {
+        console.log(`[SYSTEM] Cocok! Jam: ${jamSekarang}:${menitSekarang}. Mengirim reminder...`);
+        
+        try {
+            const announceChannel = await client.channels.fetch(ANNOUNCE_CHANNEL_ID);
+            if (announceChannel) {
+                const text = RANDOM_MESSAGES[Math.floor(Math.random() * RANDOM_MESSAGES.length)];
+                await announceChannel.send(text);
+                console.log('[SYSTEM] Reminder otomatis berhasil dikirim ke Discord.');
+            }
+        } catch (err) {
+            console.error('[REMINDER ERROR]', err);
         }
-    };
-
-    sendReminder();
-    setInterval(sendReminder, 21600000); // 6 jam sekali
+    } else {
+        console.log(`[SYSTEM] Belum waktunya mengirim reminder. Jam sekarang (WIB): ${jamSekarang}:${menitSekarang}`);
+    }
 }
 
 module.exports = { handleReminder };
