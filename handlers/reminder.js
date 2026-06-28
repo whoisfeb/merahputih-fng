@@ -26,7 +26,7 @@ async function handleReminder(client) {
     const menitSekarang = waktuJkt.getMinutes();
 
     // Jadwal target jam pengiriman: 01, 07, 13, atau 19 WIB (Sudah diisi lengkap)
-    const jadwalJam =;
+    const jadwalJam = "1,7,13,19";
 
     // 2. Beri toleransi menit karena GitHub Actions sering delay 1-10 menit dari jadwal aslinya
     // Jika jam sesuai DAN menit berada di kisaran 0 sampai 25, maka kirim pesan.
