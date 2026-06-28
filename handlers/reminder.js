@@ -7,7 +7,7 @@ const RANDOM_MESSAGES = [
     "Jadilah legenda di kota ini, bukan sekedar nama di papan skor.\n\n@everyone ",
     "Merah Putih Roleplay, menantang kreativitasmu dalan roleplay.\n\n@everyone ",
     "Satu peluru bisa mengakhiri hidu, tapi satu pengkhianat mengakhiri segalanya.\n\n@everyone",
-    "Dihimbau kepada seluruh <@&1392382455876550799> untuk **tidak sembarangan bergabung (join) ke link Discord yang tidak jelas atau tidak resmi**.\n\nKami menemukan adanya beberapa link mencurigakan yang berpotensi:\n- Mengandung scam / penipuan\n- Phishing (pencurian akun)\n- Malware / virus\n\n🔒 **Keamanan akun adalah tanggung jawab masing-masing.**\nSegala bentuk kerugian akibat join link di luar server resmi bukan tanggung jawab pihak kami.\n\n📌 **Harap diperhatikan:**\n* Hanya join link yang dibagikan oleh admin resmi\n* Jangan mudah percaya dengan DM/link dari orang tidak dikenal\n\n**Tetap waspada dan jaga keamanan akun kalian.**\n\n@everyone",
+    "Dihimbau kepada seluruh <@&1392382455876550799> untuk **tidak sembarangan bergabung (join) ke link Discord yang tidak jelas atau tidak resmi**.\n\nKami menemukan adanya beberapa link mencurarigakan yang berpotensi:\n- Mengandung scam / penipuan\n- Phishing (pencurian akun)\n- Malware / virus\n\n🔒 **Keamanan akun adalah tanggung jawab masing-masing.**\nSegala bentuk kerugian akibat join link di luar server resmi bukan tanggung jawab pihak kami.\n\n📌 **Harap diperhatikan:**\n* Hanya join link yang dibagikan oleh admin resmi\n* Jangan mudah percaya dengan DM/link dari orang tidak dikenal\n\n**Tetap waspada dan jaga keamanan akun kalian.**\n\n@everyone",
     "Halo @everyone 👋\nKami menegaskan bahwa server ini memiliki kebijakan **ZERO TOLERANCE** terhadap segala bentuk pelecehan, baik secara verbal, tulisan, maupun tindakan dalam roleplay maupun di luar roleplay.\n\n⚠️ Termasuk:\n• Pelecehan seksual\n• Catcalling / komentar tidak pantas\n• DM tidak sopan / mengganggu\n• Body shaming\n• Candaan berlebihan yang bersifat merendahkan\n• Pelecehan OOC maupun IC \n\nTidak ada alasan \"bercanda\". Tidak ada alasan \"hanya RP\". Jika melewati batas, tindakan akan diambil.\n\n📩 Jika kalian mengalami atau melihat tindakan pelecehan: Segera laporkan ke admin disertai bukti yang valid. Sanksi tegas menanti dari warning hingga **BANNED PERMANENT**.\n\n@everyone",
     "Hargai lawan roleplaymu, karena tanpa mereka ceritanmu akan hampa.\n\n@everyone",
     "Bukannya takut sama kepolisian, tapi cuman takut dipenjara terlalu lama.\n\n@everyone ",
@@ -25,7 +25,7 @@ async function handleReminder(client) {
     const jamSekarang = waktuJkt.getHours();
     const menitSekarang = waktuJkt.getMinutes();
 
-    // Jadwal target jam pengiriman: 01, 07, 13, atau 19 WIB
+    // Jadwal target jam pengiriman: 01, 07, 13, atau 19 WIB (Diperbaiki menjadi array)
     const targetJam =;
 
     // 2. Beri toleransi menit karena GitHub Actions sering delay 1-10 menit dari jadwal aslinya
