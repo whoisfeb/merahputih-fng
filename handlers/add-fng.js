@@ -139,31 +139,13 @@ async function handleAddFng(interaction) {
         });
 
         // Kumpulkan semua permission untuk channel ABOUT (Send Messages untuk role utama)
+                // Kumpulkan semua permission untuk channel ABOUT
         const aboutPermissions = [
             {
-                id: newRole.id,
+                id: interaction.guild.id, // <--- Mengunci akses untuk @everyone
                 type: OverwriteType.Role,
-                allow: [
-                    PermissionFlagsBits.ViewChannel,
-                    PermissionFlagsBits.SendMessages,
-                    PermissionFlagsBits.ReadMessageHistory,
-                    PermissionFlagsBits.AddReactions,
-                    PermissionFlagsBits.EmbedLinks,
-                    PermissionFlagsBits.AttachFiles
-                ],
-                deny: [
-                    PermissionFlagsBits.CreatePublicThreads,
-                    PermissionFlagsBits.CreatePrivateThreads,
-                    PermissionFlagsBits.UseExternalEmojis,
-                    PermissionFlagsBits.MentionEveryone,
-                    PermissionFlagsBits.ManageMessages,
-                    PermissionFlagsBits.ManageWebhooks
-                ]
-            }
-        ];
-
-        // Kumpulkan semua permission untuk channel ACTIVITY (Send Messages untuk role utama)
-        const activityPermissions = [
+                deny: [PermissionFlagsBits.ViewChannel]
+            },
             {
                 id: newRole.id,
                 type: OverwriteType.Role,
@@ -186,12 +168,51 @@ async function handleAddFng(interaction) {
             }
         ];
 
+        // Kumpulkan semua permission untuk channel ACTIVITY
+        const activityPermissions = [
+            {
+                id: interaction.guild.id, // <--- Mengunci akses untuk @everyone
+                type: OverwriteType.Role,
+                deny: [PermissionFlagsBits.ViewChannel]
+            },
+            {
+                id: newRole.id,
+                type: OverwriteType.Role,
+                allow: [
+                    PermissionFlagsBits.ViewChannel,
+                    PermissionFlagsBits.SendMessages,
+                    PermissionFlagsBits.ReadMessageHistory,
+                    PermissionFlagsBits.AddReactions,
+                    PermissionFlagsBits.EmbedLinks,
+                    PermissionFlagsBits.AttachFiles
+                ],
+                deny: [
+                    PermissionFlagsBits.CreatePublicThreads,
+                    PermissionFlagsBits.CreatePrivateThreads,
+                    PermissionFlagsBits.UseExternalEmojis,
+                    PermissionFlagsBits.MentionEveryone,
+                    PermissionFlagsBits.ManageMessages,
+                    PermissionFlagsBits.ManageWebhooks
+                ]
+            }
+        ];
+
+
         // Tambahkan role1-2 dengan permission1-2 jika ada
+                // Tambahkan role1-2 dengan permission1-2 jika diisi oleh admin
         let additionalRolesInfo = '';
         for (let i = 1; i <= 2; i++) {
             const role = interaction.options.getRole(`role${i}`);
             const permission = interaction.options.getString(`permission${i}`);
 
+            // VALIDASI PENGAMAN: Jika admin hanya mengisi salah satu saja
+            if ((role && !permission) || (!role && permission)) {
+                return await interaction.editReply({
+                    content: `❌ Gagal! Jika Anda mengisi **role${i}**, Anda wajib memilih **permission${i}** (atau sebaliknya).`
+                });
+            }
+
+            // Jika keduanya diisi lengkap, proses datanya
             if (role && permission) {
                 const perm = createPermissionByType(role.id, permission);
                 aboutPermissions.push(perm);
@@ -199,6 +220,7 @@ async function handleAddFng(interaction) {
                 additionalRolesInfo += `\n✅ ${role.name} - ${permission}`;
             }
         }
+
 
         // 2. BUAT CHANNEL ABOUT 
         console.log(`[ADD-FNG] Membuat channel ABOUT: ${channelName}`);
