@@ -6,7 +6,6 @@ const TARGET_USER_ID = '774310796565020702';
 // Map untuk menyimpan relasi: ID_Pesan_DM -> { channelId: 'xxx', messageId: 'xxx' }
 const messageMapping = new Map();
 
-// PERBAIKAN: Export menggunakan objek dengan nama properti 'handleBotRespon' sesuai index.js Anda
 module.exports = {
     handleBotRespon: (client) => {
         client.on('messageCreate', async (message) => {
@@ -19,9 +18,26 @@ module.exports = {
                     // Ambil data user target
                     const targetUser = await client.users.fetch(TARGET_USER_ID);
                     
-                    // Format teks informasi pesan masuk (Gunakan fallback jika teks kosong/hanya file)
+                    // Format teks isi pesan utama
                     const messageContent = message.content || '_[Hanya mengirim file/gambar]_';
-                    const content = `📩 **Pesan Baru**\n• **Pengirim:** ${message.author.tag} (${message.author.id})\n• **Channel:** <#${message.channel.id}>\n• **Isi:** ${messageContent}`;
+                    
+                    // === FITUR BARU: DETEKSI REPLY DI SERVER ===
+                    let replyInfo = '';
+                    if (message.reference && message.reference.messageId) {
+                        try {
+                            // Ambil pesan asli yang sedang dibalas oleh user tersebut di server
+                            const originalMessage = await message.channel.messages.fetch(message.reference.messageId);
+                            // Simpan informasi target yang dibalas ke dalam teks
+                            replyInfo = `\n• **Membalas Chat:** ${originalMessage.author.username} (\`${originalMessage.author.id}\`)`;
+                        } catch (fetchError) {
+                            // Jika pesan lama sudah dihapus atau tidak bisa diakses
+                            replyInfo = `\n• **Membalas Chat:** _[Pesan asli tidak ditemukan/dihapus]_`;
+                        }
+                    }
+                    // ==========================================
+
+                    // Gabungkan informasi pesan dengan baris replyInfo jika ada
+                    const content = `📩 **Pesan Baru**\n• **Pengirim:** ${message.author.username} (\`${message.author.id}\`)\n• **Channel:** <#${message.channel.id}>${replyInfo}\n• **Isi:** ${messageContent}`;
 
                     // Kirim pesan ke DM user target
                     const dmMessage = await targetUser.send({
