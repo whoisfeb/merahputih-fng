@@ -15,8 +15,11 @@ async function handleSay(interaction) {
     // 1. Ambil input string mentah dari Discord
     const rawMessage = interaction.options.getString('message');
     
-    // 2. PERBAIKAN UTAMA: Mengonversi ketikan \n manual menjadi enter ke bawah
-    const message = rawMessage.split('\\n').join('\n');
+    // 2. Mengonversi ketikan \n manual menjadi enter ke bawah
+    const message = rawMessage ? rawMessage.split('\\n').join('\n') : '';
+
+    // 3. BARU: Mengambil file pilihan (opsional)
+    const attachment = interaction.options.getAttachment('file');
 
     // Mengambil channel pilihan jika diisi, jika kosong gunakan channel saat ini
     const targetChannel = interaction.options.getChannel('channel') || interaction.channel;
@@ -25,8 +28,20 @@ async function handleSay(interaction) {
     await interaction.deferReply({ ephemeral: true });
 
     try {
-        // Kirim pesan teks polos ke target channel yang dipilih
-        await targetChannel.send({ content: message });
+        // Siapkan payload data yang akan dikirim
+        const payload = {};
+        if (message) payload.content = message;
+        if (attachment) payload.files = [attachment]; // Memasukkan file ke dalam array files
+
+        // Validasi: Harus ada teks atau file yang dikirim
+        if (!message && !attachment) {
+            return interaction.editReply({
+                content: '❌ Kamu harus memasukkan teks atau mengunggah file!'
+            });
+        }
+
+        // Kirim pesan dan file ke target channel yang dipilih
+        await targetChannel.send(payload);
 
         // Kirim Log ke Log Channel menggunakan Embed
         const logChannel = interaction.client.channels.cache.get(logChannelId);
@@ -37,8 +52,9 @@ async function handleSay(interaction) {
                 .addFields(
                     { name: 'User', value: `<@${interaction.user.id}>`, inline: true },
                     { name: 'Target Channel', value: `<#${targetChannel.id}>`, inline: true },
-                    // Batasi teks di log embed agar tidak merusak struktur data (maksimal 1024 karakter)
-                    { name: 'Pesan', value: message.substring(0, 1024) || '-' }
+                    { name: 'Pesan', value: message.substring(0, 1024) || '(Hanya File)' },
+                    // BARU: Menampilkan nama file di log jika ada
+                    { name: 'File Lampiran', value: attachment ? `[${attachment.name}](${attachment.url})` : '-' }
                 )
                 .setTimestamp();
 

@@ -38,25 +38,31 @@ function sendLog(guild, embed) {
 // --- REGISTER SLASH COMMANDS ---
 const commands = [
 
-    {
+        {
         name: 'say',
         description: 'Kirim pesan manual (khusus role tertentu)',
         options: [
             { 
                 name: 'message', 
-                type: 3, 
-                description: 'gunakan \n untuk membuat bari baru contoh baris pertama\nbaris kedua', 
-                required: true 
+                type: 3, // String
+                description: 'gunakan \\n untuk membuat baris baru contoh baris pertama\\nbaris kedua', 
+                required: false // Diubah ke false agar user bisa kirim file saja tanpa teks
             },
             { 
                 name: 'channel', 
-                type: 7, 
+                type: 7, // Channel
                 description: 'Pilih channel tujuan (kosongkan jika ingin di channel saat ini)', 
-                // 💡 Baris channel_types di sini sudah dihapus total
                 required: false 
+            },
+            {
+                name: 'file',
+                type: 11, // 11 adalah tipe data untuk ATTACHMENT (File)
+                description: 'Pilih file yang ingin dikirim (opsional)',
+                required: false
             }
         ],
     },
+
 
 
     {
