@@ -18,7 +18,7 @@ async function handleSay(interaction) {
     // 2. Mengonversi ketikan \n manual menjadi enter ke bawah
     const message = rawMessage ? rawMessage.split('\\n').join('\n') : '';
 
-    // 3. BARU: Mengambil file pilihan (opsional)
+    // 3. Mengambil file pilihan (opsional) - Mendukung Ctrl + V gambar
     const attachment = interaction.options.getAttachment('file');
 
     // Mengambil channel pilihan jika diisi, jika kosong gunakan channel saat ini
@@ -28,17 +28,17 @@ async function handleSay(interaction) {
     await interaction.deferReply({ ephemeral: true });
 
     try {
-        // Siapkan payload data yang akan dikirim
-        const payload = {};
-        if (message) payload.content = message;
-        if (attachment) payload.files = [attachment]; // Memasukkan file ke dalam array files
-
-        // Validasi: Harus ada teks atau file yang dikirim
+        // Validasi awal: Harus ada teks ATAU file yang dikirim
         if (!message && !attachment) {
             return interaction.editReply({
                 content: '❌ Kamu harus memasukkan teks atau mengunggah file!'
             });
         }
+
+        // Siapkan payload data yang akan dikirim
+        const payload = {};
+        if (message) payload.content = message;
+        if (attachment) payload.files = [attachment]; // Memasukkan file ke dalam array files
 
         // Kirim pesan dan file ke target channel yang dipilih
         await targetChannel.send(payload);
@@ -46,17 +46,24 @@ async function handleSay(interaction) {
         // Kirim Log ke Log Channel menggunakan Embed
         const logChannel = interaction.client.channels.cache.get(logChannelId);
         if (logChannel) {
+            // PERBAIKAN: Pastikan value teks tidak kosong agar Embed tidak error/crash
+            const embedMessageText = message ? message.substring(0, 1024) : '(Hanya File / Tanpa Teks)';
+
             const logEmbed = new EmbedBuilder()
                 .setTitle('📢 Command /say Digunakan')
                 .setColor(0xffcc00)
                 .addFields(
                     { name: 'User', value: `<@${interaction.user.id}>`, inline: true },
                     { name: 'Target Channel', value: `<#${targetChannel.id}>`, inline: true },
-                    { name: 'Pesan', value: message.substring(0, 1024) || '(Hanya File)' },
-                    // BARU: Menampilkan nama file di log jika ada
+                    { name: 'Pesan', value: embedMessageText }, // Menggunakan variabel yang aman
                     { name: 'File Lampiran', value: attachment ? `[${attachment.name}](${attachment.url})` : '-' }
                 )
                 .setTimestamp();
+
+            // Opsional: Jika yang dikirim adalah gambar, tampilkan previewnya langsung di dalam log embed
+            if (attachment && attachment.contentType?.startsWith('image/')) {
+                logEmbed.setImage(attachment.url);
+            }
 
             await logChannel.send({ embeds: [logEmbed] }).catch(console.error);
         }
