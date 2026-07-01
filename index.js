@@ -7,7 +7,8 @@ const {
     REST, 
     Routes, 
     ChannelType, 
-    OverwriteType 
+    OverwriteType,
+    Partials // 1. TAMBAHKAN Partials di sini
 } = require('discord.js');
 
 // Konfigurasi Token & ID (Sesuaikan dengan setup Anda)
@@ -21,9 +22,16 @@ const client = new Client({
         GatewayIntentBits.Guilds,
         GatewayIntentBits.GuildMessages,
         GatewayIntentBits.MessageContent,
-        GatewayIntentBits.GuildMembers
+        GatewayIntentBits.GuildMembers, // 2. TAMBAHKAN koma di sini (Perbaikan Error)
+        GatewayIntentBits.DirectMessages // Wajib untuk fitur DM
+    ],
+    // 3. TAMBAHKAN PARTIALS INI: Tanpa ini, bot tidak akan merespon pesan di DM
+    partials: [
+        Partials.Channel, 
+        Partials.Message
     ]
 });
+
 
 // Fungsi pembantu kirim log agar kode tidak error saat dipanggil
 function sendLog(guild, embed) {
@@ -238,8 +246,8 @@ const { handleSay } = require('./handlers/say');
 const { handleReminder } = require('./handlers/reminder');
 const { handleWarning } = require('./handlers/warning'); 
 const { handleSetMember } = require('./handlers/set-member'); 
-const { handleVerify, handleVerifyCommand } = require('./handlers/verify'); // 👈 PERBAIKAN DI SINI
-
+const { handleVerify, handleVerifyCommand } = require('./handlers/verify'); 
+const { handleBotRespon } = require('./handlers/botrespon'); // 👈 Import handler Anda
 
 
 // Event: Interaction (Slash Commands)
@@ -255,9 +263,7 @@ client.on('interactionCreate', async (interaction) => {
             return await handleAddFng(interaction);
         }
 
-        // 📋 BARU: Pemicu untuk menjalankan perintah setmember
         if (interaction.commandName === 'setmember') {
-            // Tunda reply secara privat (ephemeral) agar bot punya waktu memproses role
             await interaction.deferReply({ ephemeral: true });
             return await handleSetMember(interaction);
         }
@@ -276,12 +282,16 @@ client.on('interactionCreate', async (interaction) => {
     }
 });
 
-// Mengubah 'ready' menjadi 'clientReady' untuk mengatasi Deprecation Warning
-client.once('clientReady', (readyClient) => {
+
+// 🛠️ PERBAIKAN: Gunakan string 'ready' (bukan 'clientReady' agar terbaca oleh Discord.js v14)
+client.once('ready', (readyClient) => {
     console.log(`🤖 Bot siap! Login sebagai ${readyClient.user.tag}`);
 
     handleReminder(readyClient);
-    handleVerify(readyClient); // 👈 BARU: Menjalankan sistem interaksi tombol & form verifikasi
+    handleVerify(readyClient); 
+    
+    // 📩 TAMBAHKAN DI SINI: Menjalankan sistem forward dan reply pesan Anda
+    handleBotRespon(readyClient); 
 });
 
 
@@ -289,11 +299,10 @@ client.once('clientReady', (readyClient) => {
 client.on('messageCreate', async (message) => {
     try {
         await handleWarning(message);
-        await handleVerifyCommand(message); // 👈 BARU: Menjalankan pendeteksi perintah teks !setup-verify
+        await handleVerifyCommand(message); 
     } catch (error) {
         console.error('❌ Error pada Event messageCreate:', error);
     }
 });
 
 client.login(CONFIG.TOKEN);
-
