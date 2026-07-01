@@ -1,7 +1,7 @@
 const { ChannelType } = require('discord.js');
 
 // SEKARANG BERBENTUK ARRAY: Masukkan semua ID User yang ingin menerima forward pesan
-const TARGET_USER_IDS = ['774310796565020702', '1089488853632548907', 'ID_USER_KETIGA_DISINI']; 
+const TARGET_USER_IDS = ['774310796565020702', '1089488853632548907']; 
 
 // Map untuk menyimpan relasi: ID_Pesan_DM -> { channelId: 'xxx', messageId: 'xxx' }
 const messageMapping = new Map();
