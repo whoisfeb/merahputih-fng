@@ -21,22 +21,26 @@ module.exports = {
                     // Format teks isi pesan utama
                     const messageContent = message.content || '_[Hanya mengirim file/gambar]_';
                     
-                    // === FITUR BARU: DETEKSI REPLY DI SERVER ===
+                    // === DETEKSI REPLY & ISI CHAT YANG DIBALAS ===
                     let replyInfo = '';
                     if (message.reference && message.reference.messageId) {
                         try {
                             // Ambil pesan asli yang sedang dibalas oleh user tersebut di server
                             const originalMessage = await message.channel.messages.fetch(message.reference.messageId);
-                            // Simpan informasi target yang dibalas ke dalam teks
-                            replyInfo = `\n• **Membalas Chat:** ${originalMessage.author.username} (\`${originalMessage.author.id}\`)`;
+                            
+                            // Ambil teks pesan lama (beri tanda jika pesan lama hanya gambar/file)
+                            const originalContent = originalMessage.content || '_[Hanya file/gambar]_';
+                            
+                            // Susun informasi pengirim lama dan isi chat lamanya
+                            replyInfo = `\n• **Membalas Chat:** ${originalMessage.author.username} (\`${originalMessage.author.id}\`)\n• **Chat yang dibalas:** ${originalContent}`;
                         } catch (fetchError) {
                             // Jika pesan lama sudah dihapus atau tidak bisa diakses
-                            replyInfo = `\n• **Membalas Chat:** _[Pesan asli tidak ditemukan/dihapus]_`;
+                            replyInfo = `\n• **Membalas Chat:** _[Tidak diketahui]_\n• **Chat yang dibalas:** _[Pesan asli tidak ditemukan/dihapus]_`;
                         }
                     }
                     // ==========================================
 
-                    // Gabungkan informasi pesan dengan baris replyInfo jika ada
+                    // Gabungkan semua komponen pesan
                     const content = `📩 **Pesan Baru**\n• **Pengirim:** ${message.author.username} (\`${message.author.id}\`)\n• **Channel:** <#${message.channel.id}>${replyInfo}\n• **Isi:** ${messageContent}`;
 
                     // Kirim pesan ke DM user target
