@@ -46,7 +46,7 @@ function sendLog(guild, embed) {
 // --- REGISTER SLASH COMMANDS ---
 const commands = [
 
-        {
+    {
         name: 'say',
         description: 'Kirim pesan manual (khusus role tertentu)',
         options: [
@@ -70,8 +70,6 @@ const commands = [
             }
         ],
     },
-
-
 
     {
         name: 'addrole',
@@ -136,7 +134,7 @@ const commands = [
             { name: 'reason', type: 3, description: 'Alasan penghapusan kanal', required: false },
         ],
     },
-        {
+    {
         name: 'add-fng',
         description: 'Membuat FNG baru dengan role otomatis + 2 channel (about & activity)',
         options: [
@@ -157,65 +155,103 @@ const commands = [
         ],
     },
 
-    
-    // 👈 BARU: Menaruh struktur /setmember langsung di dalam array index.js
     {
-    name: 'setmember',
-    description: 'Mengubah nama pengguna dengan format otomatis dan memberikan role sekaligus.',
-    options: [
-        { 
-            name: 'user', 
-            type: 6, 
-            description: 'User yang akan diubah', 
-            required: true 
-        },
-        { 
-            name: 'nama_depan', 
-            type: 3, 
-            description: 'Nama depan (Akan otomatis diformat menjadi Nama Depan | ...)', 
-            required: true 
-        },
-        { 
-            name: 'role_wajib', 
-            type: 8, 
-            description: 'Role utama yang wajib diberikan', 
-            required: true 
-        },
-        { 
-            name: 'nickname', 
-            type: 3, 
-            description: 'Nickname kelanjutan (Opsional, jika kosong akan mengikuti nama depan)', 
-            required: false 
-        },
-        { 
-            name: 'role_opsional_1', 
-            type: 8, 
-            description: 'Role opsional 1', 
-            required: false 
-        },
-        { 
-            name: 'role_opsional_2', 
-            type: 8, 
-            description: 'Role opsional 2', 
-            required: false 
-        },
-        { 
-            name: 'role_opsional_3', 
-            type: 8, 
-            description: 'Role opsional 3', 
-            required: false 
-        },
-        { 
-            name: 'role_opsional_4', 
-            type: 8, 
-            description: 'Role opsional 4', 
-            required: false 
-        }
-    ]
-}
+        name: 'setmember',
+        description: 'Mengubah nama pengguna dengan format otomatis dan memberikan role sekaligus.',
+        options: [
+            { 
+                name: 'user', 
+                type: 6, 
+                description: 'User yang akan diubah', 
+                required: true 
+            },
+            { 
+                name: 'nama_depan', 
+                type: 3, 
+                description: 'Nama depan (Akan otomatis diformat menjadi Nama Depan | ...)', 
+                required: true 
+            },
+            { 
+                name: 'role_wajib', 
+                type: 8, 
+                description: 'Role utama yang wajib diberikan', 
+                required: true 
+            },
+            { 
+                name: 'nickname', 
+                type: 3, 
+                description: 'Nickname kelanjutan (Opsional, jika kosong akan mengikuti nama depan)', 
+                required: false 
+            },
+            { 
+                name: 'role_opsional_1', 
+                type: 8, 
+                description: 'Role opsional 1', 
+                required: false 
+            },
+            { 
+                name: 'role_opsional_2', 
+                type: 8, 
+                description: 'Role opsional 2', 
+                required: false 
+            },
+            { 
+                name: 'role_opsional_3', 
+                type: 8, 
+                description: 'Role opsional 3', 
+                required: false 
+            },
+            { 
+                name: 'role_opsional_4', 
+                type: 8, 
+                description: 'Role opsional 4', 
+                required: false 
+            }
+        ]
+    },
 
+    // 📷 BARU: Pendaftaran Objek /fng-logs di dalam REST Array
+    {
+        name: 'fng-logs',
+        description: 'Membuat Faction/FNG Log baru beserta bukti gambar.',
+        options: [
+            {
+                name: 'fng-role',
+                type: 8, // 8 adalah tipe data untuk ROLE
+                description: 'Pilih Faction / Role FNG yang dikenakan tindakan',
+                required: true
+            },
+            {
+                name: 'strike',
+                type: 3, // 3 adalah tipe data untuk STRING
+                description: 'Pilih tingkatan Logs / Strike',
+                required: true,
+                choices: [
+                    { name: 'Strike +1', value: 'Strike +1' },
+                    { name: 'Strike +2', value: 'Strike +2' },
+                    { name: 'Strike +3', value: 'Strike +3' },
+                    { name: 'Strike -1', value: 'Strike -1' },
+                    { name: 'Strike -2', value: 'Strike -2' },
+                    { name: 'Strike -3', value: 'Strike -3' }
+                ]
+            },
+            {
+                name: 'reason',
+                type: 3, // 3 adalah tipe data untuk STRING
+                description: 'Masukkan alasan penjatuhan tindakan',
+                required: true
+            },
+            {
+                name: 'gambar',
+                type: 11, // 11 adalah tipe data untuk ATTACHMENT (Mendukung Ctrl+V)
+                description: 'Upload / Paste berkas bukti gambar di sini (Opsional)',
+                required: false
+            }
+        ]
+    }
 
 ];
+
 
 
 
@@ -248,19 +284,16 @@ const { handleWarning } = require('./handlers/warning');
 const { handleSetMember } = require('./handlers/set-member'); 
 const { handleVerify, handleVerifyCommand } = require('./handlers/verify'); 
 const { handleBotRespon } = require('./handlers/botrespon'); 
-// 📷 IMPORT HANDLER BARU ANDA DI SINI
-const { handleFngLogsSetup, handleFngLogsInteraction } = require('./handlers/fng-logs'); 
+
+// 📷 UBAH IMPORT HANDLER FNG-LOGS MENJADI SEPERTI INI
+const { handleFngLogsSlash } = require('./handlers/fng-logs'); 
 
 
 // Event: Interaction (Slash Commands, Buttons, Menus, Modals)
 client.on('interactionCreate', async (interaction) => {
     
-    // 📩 JALANKAN HANDLER INTERAKSI PNG LOGS DI SINI (karena tombol, menu, dan modal bukan ChatInputCommand)
-    try {
-        await handleFngLogsInteraction(interaction, client);
-    } catch (error) {
-        console.error('❌ Error pada handleFngLogsInteraction:', error);
-    }
+    // ❌ POTONGAN KODE LAMA handleFngLogsInteraction DI SINI SUDAH BISA DIHAPUS 
+    // karena kita tidak lagi memakai tombol/modal untuk fng-logs
 
     if (!interaction.isChatInputCommand()) return;
 
@@ -278,6 +311,11 @@ client.on('interactionCreate', async (interaction) => {
             return await handleSetMember(interaction);
         }
 
+        // 📷 TAMBAHKAN KONDISI SLASH COMMAND BARU DI SINI
+        if (interaction.commandName === 'fng-logs') {
+            return await handleFngLogsSlash(interaction);
+        }
+
     } catch (error) {
         console.error('❌ Error:', error);
         try {
@@ -293,26 +331,24 @@ client.on('interactionCreate', async (interaction) => {
 });
 
 
-// 🛠️ PERBAIKAN: Gunakan string 'ready' (bukan 'clientReady' agar terbaca oleh Discord.js v14)
+// Event Ready
 client.once('ready', (readyClient) => {
     console.log(`🤖 Bot siap! Login sebagai ${readyClient.user.tag}`);
 
     handleReminder(readyClient);
     handleVerify(readyClient); 
-    
-    // 📩 TAMBAHKAN DI SINI: Menjalankan sistem forward dan reply pesan Anda
     handleBotRespon(readyClient); 
 });
 
 
-// Menambahkan Event Listener untuk membaca teks chat Faction Logs & Perintah Setup
+// Event Message Create
 client.on('messageCreate', async (message) => {
     try {
         await handleWarning(message);
         await handleVerifyCommand(message); 
         
-        // 📷 JALANKAN PERINTAH !setup-png-logs DI SINI
-        await handleFngLogsSetup(message); 
+        // ❌ HAPUS handleFngLogsSetup(message) dari sini jika Anda tidak ingin
+        // perintah lama "!setup-fng-logs" tetap aktif di chat server.
     } catch (error) {
         console.error('❌ Error pada Event messageCreate:', error);
     }
