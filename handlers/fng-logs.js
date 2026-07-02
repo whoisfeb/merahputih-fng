@@ -14,7 +14,7 @@ const {
 const activeSessions = new Map();
 
 // ID Channel tujuan LOG di sini
-const LOG_CHANNEL_ID = '1515008339904434427'; 
+const LOG_CHANNEL_ID = '1499605521630625929'; 
 
 // Fungsi 1: Menangani perintah teks !setup-fng-logs
 async function handleFngLogsSetup(message) {
