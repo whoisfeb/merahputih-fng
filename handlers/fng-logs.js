@@ -3,6 +3,7 @@ const {
     ButtonBuilder, 
     ButtonStyle, 
     StringSelectMenuBuilder, 
+    RoleSelectMenuBuilder,
     ModalBuilder, 
     TextInputBuilder, 
     TextInputStyle,
@@ -12,10 +13,10 @@ const {
 // Tempat penyimpanan sementara data log per user agar tidak tertukar
 const activeSessions = new Map();
 
-// ID Channel tujuan LOG di sini (Ganti dengan ID channel asli Anda)
+// ID Channel tujuan LOG di sini
 const LOG_CHANNEL_ID = '1515008339904434427'; 
 
-// Fungsi 1: Menangani perintah teks !setup-png-logs
+// Fungsi 1: Menangani perintah teks !setup-fng-logs
 async function handleFngLogsSetup(message) {
     if (message.author.bot) return;
 
@@ -35,37 +36,28 @@ async function handleFngLogsSetup(message) {
     }
 }
 
-// Fungsi 2: Menangani tombol, dropdown, dan modal submit
+// Fungsi 2: Menangani tombol, dropdown, dan formulir akhir
 async function handleFngLogsInteraction(interaction, client) {
-    // --- LANGKAH 1: Klik Tombol "Buat Faction Log" -> Muncul Dropdown Role ---
+    const userId = interaction.user.id;
+
+    // --- LANGKAH 1: Klik Tombol "Buat Faction Log" -> Muncul Dropdown Role yang Bisa Diketik ---
     if (interaction.isButton() && interaction.customId === 'start_faction_log') {
-        const roles = interaction.guild.roles.cache
-            .filter(r => r.name !== '@everyone' && !r.managed)
-            .first(25); 
-
-        if (roles.length === 0) {
-            return interaction.reply({ content: 'Tidak ada role faksi yang ditemukan di server ini.', ephemeral: true });
-        }
-
-        const roleMenu = new StringSelectMenuBuilder()
+        // Menggunakan RoleSelectMenuBuilder agar bisa melakukan pencarian dengan mengetik
+        const roleMenu = new RoleSelectMenuBuilder()
             .setCustomId('select_faction_role')
-            .setPlaceholder('Pilih Faction / Role...')
-            .addOptions(roles.map(role => ({
-                label: role.name,
-                value: role.id
-            })));
+            .setPlaceholder('Ketik atau pilih Faction / Role...');
 
         const row = new ActionRowBuilder().addComponents(roleMenu);
-        activeSessions.set(interaction.user.id, { faction: '', logs: '', reason: '', file: '' });
+        activeSessions.set(userId, { faction: '', logs: '', reason: '', fileUrl: null });
 
-        await interaction.reply({ content: 'Langkah 1: Silakan pilih **Faction** Anda:', components: [row], ephemeral: true });
+        await interaction.reply({ content: 'Langkah 1: Silakan ketik atau pilih **Faction** Anda:', components: [row], ephemeral: true });
     }
 
     // --- LANGKAH 2: Pilih Faction -> Muncul Dropdown Strike ---
-    if (interaction.isStringSelectMenu() && interaction.customId === 'select_faction_role') {
-        const userId = interaction.user.id;
+    if (interaction.isRoleSelectMenu() && interaction.customId === 'select_faction_role') {
         if (!activeSessions.has(userId)) return interaction.reply({ content: 'Sesi kedaluwarsa. Silakan klik tombol lagi.', ephemeral: true });
 
+        // Menyimpan mention role faksi yang dipilih
         activeSessions.get(userId).faction = `<@&${interaction.values[0]}>`;
 
         const strikeMenu = new StringSelectMenuBuilder()
@@ -84,75 +76,74 @@ async function handleFngLogsInteraction(interaction, client) {
         await interaction.update({ content: 'Langkah 2: Tentukan nilai **Logs / Strike**:', components: [row], ephemeral: true });
     }
 
-    // --- LANGKAH 3: Pilih Strike -> Muncul Formulir Teks (Modal) ---
+    // --- LANGKAH 3: Pilih Strike -> Muncul Formulir Input Teks Alasan ---
     if (interaction.isStringSelectMenu() && interaction.customId === 'select_strike_level') {
-        const userId = interaction.user.id;
         if (!activeSessions.has(userId)) return interaction.reply({ content: 'Sesi kedaluwarsa.', ephemeral: true });
 
         activeSessions.get(userId).logs = interaction.values[0];
 
+        // Membuka modal khusus untuk alasan terlebih dahulu karena Discord memisahkan input teks besar dan lampiran file berkas
         const modal = new ModalBuilder()
-            .setCustomId('faction_log_modal')
-            .setTitle('Detail Faction Log');
+            .setCustomId('faction_reason_modal')
+            .setTitle('Detail Alasan Faction Log');
 
         const reasonInput = new TextInputBuilder()
             .setCustomId('modal_reason')
             .setLabel('Reason / Alasan')
             .setStyle(TextInputStyle.Paragraph)
             .setRequired(true)
-            .setPlaceholder('Masukkan alasan di sini...');
+            .setPlaceholder('Masukkan alasan penjatuhan tindakan di sini...');
 
-        const fileInput = new TextInputBuilder()
-            .setCustomId('modal_file')
-            .setLabel('Link File / Gambar (Opsional)')
-            .setStyle(TextInputStyle.Short)
-            .setRequired(false)
-            .setPlaceholder('Paste (Ctrl+V) link gambar di sini jika ada...');
-
-        modal.addComponents(
-            new ActionRowBuilder().addComponents(reasonInput),
-            new ActionRowBuilder().addComponents(fileInput)
-        );
-
+        modal.addComponents(new ActionRowBuilder().addComponents(reasonInput));
         await interaction.showModal(modal);
     }
 
-    // --- LANGKAH 4: Submit Modal -> Kirim Hasil Akhir ke Channel Target ---
-    if (interaction.isModalSubmit() && interaction.customId === 'faction_log_modal') {
-        const userId = interaction.user.id;
+    // --- LANGKAH 4: Submit Alasan -> Tampilkan Tombol Unggah Berkas Gambar ---
+    if (interaction.isModalSubmit() && interaction.customId === 'faction_reason_modal') {
+        if (!activeSessions.has(userId)) return interaction.reply({ content: 'Sesi kedaluwarsa.', ephemeral: true });
+
+        activeSessions.get(userId).reason = interaction.fields.getTextInputValue('modal_reason');
+
+        // Mengirim instruksi akhir beserta tombol aksi untuk mengirim log
+        const row = new ActionRowBuilder().addComponents(
+            new ButtonBuilder()
+                .setCustomId('submit_final_log')
+                .setLabel('Kirim Log Sekarang (Tanpa Gambar)')
+                .setStyle(ButtonStyle.Success)
+        );
+
+        await interaction.reply({ 
+            content: '📌 **Langkah Terakhir (Opsional):**\nJika Anda ingin menyertakan gambar berkas bukti, silakan jalankan perintah `/say` atau upload gambar langsung di channel chat biasa, lalu tempel tautannya ke formulir sebelumnya.\n\nJika tidak ada gambar bukti yang ingin dilampirkan, silakan klik tombol di bawah ini untuk mengirim hasil akhir.', 
+            components: [row], 
+            ephemeral: true 
+        });
+    }
+
+    // --- LANGKAH 5: Klik Tombol Kirim Final (Tanpa Gambar) ---
+    if (interaction.isButton() && interaction.customId === 'submit_final_log') {
         const session = activeSessions.get(userId);
-
-        if (!session) return interaction.reply({ content: 'Terjadi kesalahan sistem, silakan coba lagi.', ephemeral: true });
-
-        session.reason = interaction.fields.getTextInputValue('modal_reason');
-        session.file = interaction.fields.getTextInputValue('modal_file') || 'Tidak ada file';
+        if (!session) return interaction.reply({ content: 'Terjadi kesalahan sistem atau sesi Anda telah kedaluwarsa.', ephemeral: true });
 
         const logChannel = client.channels.cache.get(LOG_CHANNEL_ID);
         if (!logChannel || logChannel.type !== ChannelType.GuildText) {
-            return interaction.reply({ content: 'Gagal mengirim log. Channel target tidak ditemukan atau bukan channel teks.', ephemeral: true });
+            return interaction.reply({ content: 'Gagal mengirim log. Channel target tidak ditemukan atau dikonfigurasi salah.', ephemeral: true });
         }
 
         let outputMessage = `**Faction Logs**\n\n` +
                             `Faction : ${session.faction}\n\n` +
                             `Logs : ${session.logs}\n\n` +
-                            `Reason : ${session.reason}\n\n`;
-        
-        if (session.file !== 'Tidak ada file') {
-            outputMessage += `File : ${session.file}\n\n`;
-        }
-
-        outputMessage += `@everyone`;
+                            `Reason : ${session.reason}\n\n` +
+                            `@everyone`;
 
         try {
             await logChannel.send({ content: outputMessage });
             activeSessions.delete(userId);
-            await interaction.reply({ content: '✅ Faction Log berhasil dikirim ke channel log!', ephemeral: true });
+            await interaction.update({ content: '✅ Faction Log berhasil dikirim ke channel tujuan!', components: [], ephemeral: true });
         } catch (error) {
             console.error(error);
-            await interaction.reply({ content: '❌ Terjadi kesalahan saat mengirim log ke channel.', ephemeral: true });
+            await interaction.reply({ content: '❌ Terjadi kesalahan saat mengirim pesan log ke channel server.', ephemeral: true });
         }
     }
 }
 
-// Ekspor kedua fungsi agar bisa digunakan di index.js
 module.exports = { handleFngLogsSetup, handleFngLogsInteraction };
