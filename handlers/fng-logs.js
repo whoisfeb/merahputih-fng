@@ -26,6 +26,10 @@ async function handleFngLogs(interaction) {
         });
     }
 
+    // ⏳ SOLUSI ERROR 10062: Amankan interaksi agar token tidak kedaluwarsa dalam 3 detik
+    // Memberikan bot waktu tambahan hingga 15 menit untuk memproses unggahan file gambar
+    await interaction.deferReply({ ephemeral: true });
+
     // Ambil data input dari user jika lolos pengecekan izin di atas
     const fngRole = interaction.options.getRole('fng-role');
     const strike = interaction.options.getString('strike');
@@ -35,9 +39,9 @@ async function handleFngLogs(interaction) {
     // Cari channel log target
     const logChannel = interaction.client.channels.cache.get(LOG_CHANNEL_ID);
     if (!logChannel || logChannel.type !== ChannelType.GuildText) {
-        return interaction.reply({ 
-            content: '❌ Gagal mengirim log. Channel target tidak ditemukan atau dikonfigurasi salah.', 
-            ephemeral: true 
+        // PERBAIKAN: Menggunakan editReply karena status interaksi sudah di-defer
+        return interaction.editReply({ 
+            content: '❌ Gagal mengirim log. Channel target tidak ditemukan atau dikonfigurasi salah.'
         });
     }
 
@@ -60,16 +64,15 @@ async function handleFngLogs(interaction) {
         // Kirim ke channel target LOG
         await logChannel.send(payload);
         
-        // Beri respon sukses ke admin/user yang menjalankan perintah
-        await interaction.reply({ 
-            content: `✅ Faction Log untuk ${fngRole.name} berhasil dikirim ke <#${LOG_CHANNEL_ID}>!`, 
-            ephemeral: true 
+        // PERBAIKAN: Menggunakan editReply untuk memberikan respons sukses akhir
+        await interaction.editReply({ 
+            content: `✅ Faction Log untuk ${fngRole.name} berhasil dikirim ke <#${LOG_CHANNEL_ID}>!`
         });
     } catch (error) {
         console.error(error);
-        await interaction.reply({ 
-            content: '❌ Terjadi kesalahan saat mencoba mengirim log ke channel tujuan.', 
-            ephemeral: true 
+        // PERBAIKAN: Menggunakan editReply untuk respons error
+        await interaction.editReply({ 
+            content: '❌ Terjadi kesalahan saat mencoba mengirim log ke channel tujuan.'
         });
     }
 }
