@@ -4,7 +4,7 @@ const { ChannelType } = require('discord.js');
 const LOG_CHANNEL_ID = '1499605521630625929'; 
 
 // Nama fungsi disamakan dengan yang di-import pada index.js Anda
-async function handleFngLogsSlash(interaction) {
+async function handleFngLogs(interaction) {
     // Ambil data input dari user
     const fngRole = interaction.options.getRole('fng-role');
     const strike = interaction.options.getString('strike');
@@ -54,4 +54,4 @@ async function handleFngLogsSlash(interaction) {
 }
 
 // WAJIB DIEKSPOR: Agar bisa dibaca oleh const { handleFngLogsSlash } di index.js
-module.exports = { handleFngLogsSlash };
+module.exports = { handleFngLogs };

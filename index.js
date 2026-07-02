@@ -44,6 +44,8 @@ function sendLog(guild, embed) {
 
 // --- REGISTER SLASH COMMANDS ---
 // --- REGISTER SLASH COMMANDS ---
+// --- REGISTER SLASH COMMANDS ---
+// --- REGISTER SLASH COMMANDS ---
 const commands = [
 
     {
@@ -285,15 +287,15 @@ const { handleSetMember } = require('./handlers/set-member');
 const { handleVerify, handleVerifyCommand } = require('./handlers/verify'); 
 const { handleBotRespon } = require('./handlers/botrespon'); 
 
-// 📷 UBAH IMPORT HANDLER FNG-LOGS MENJADI SEPERTI INI
-const { handleFngLogsSlash } = require('./handlers/fng-logs'); 
+// 📷 IMPORT HANDLER BARU (Disamakan menjadi handleFngLogs)
+const { handleFngLogs } = require('./handlers/fng-logs'); 
 
 
 // Event: Interaction (Slash Commands, Buttons, Menus, Modals)
 client.on('interactionCreate', async (interaction) => {
     
-    // ❌ POTONGAN KODE LAMA handleFngLogsInteraction DI SINI SUDAH BISA DIHAPUS 
-    // karena kita tidak lagi memakai tombol/modal untuk fng-logs
+    // ❌ FUNGSI TOMBOL/MODAL LAMA DI SINI SUDAH DIHAPUS 
+    // karena alur fng-logs sudah berubah total menjadi Slash Command (/)
 
     if (!interaction.isChatInputCommand()) return;
 
@@ -311,9 +313,9 @@ client.on('interactionCreate', async (interaction) => {
             return await handleSetMember(interaction);
         }
 
-        // 📷 TAMBAHKAN KONDISI SLASH COMMAND BARU DI SINI
+        // 📷 JALANKAN SLASH COMMAND FNG-LOGS DI SINI
         if (interaction.commandName === 'fng-logs') {
-            return await handleFngLogsSlash(interaction);
+            return await handleFngLogs(interaction);
         }
 
     } catch (error) {
@@ -347,8 +349,8 @@ client.on('messageCreate', async (message) => {
         await handleWarning(message);
         await handleVerifyCommand(message); 
         
-        // ❌ HAPUS handleFngLogsSetup(message) dari sini jika Anda tidak ingin
-        // perintah lama "!setup-fng-logs" tetap aktif di chat server.
+        // ❌ handleFngLogsSetup(message) DI SINI SUDAH DIHAPUS
+        // karena sistem chat manual !setup-fng-logs sudah tidak digunakan lagi
     } catch (error) {
         console.error('❌ Error pada Event messageCreate:', error);
     }
