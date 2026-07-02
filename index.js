@@ -257,9 +257,9 @@ client.on('interactionCreate', async (interaction) => {
     
     // 📩 JALANKAN HANDLER INTERAKSI PNG LOGS DI SINI (karena tombol, menu, dan modal bukan ChatInputCommand)
     try {
-        await handlePngLogsInteraction(interaction, client);
+        await handleFngLogsInteraction(interaction, client);
     } catch (error) {
-        console.error('❌ Error pada handlePngLogsInteraction:', error);
+        console.error('❌ Error pada handleFngLogsInteraction:', error);
     }
 
     if (!interaction.isChatInputCommand()) return;
@@ -312,7 +312,7 @@ client.on('messageCreate', async (message) => {
         await handleVerifyCommand(message); 
         
         // 📷 JALANKAN PERINTAH !setup-png-logs DI SINI
-        await handlePngLogsSetup(message); 
+        await handleFngLogsSetup(message); 
     } catch (error) {
         console.error('❌ Error pada Event messageCreate:', error);
     }
