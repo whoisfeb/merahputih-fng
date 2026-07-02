@@ -1,7 +1,7 @@
 const { ChannelType } = require('discord.js');
 
 // MASUKKAN: ID Channel tujuan untuk menampung semua forward pesan (bukan ID User)
-const TARGET_CHANNEL_ID = '1234567890123456789'; 
+const TARGET_CHANNEL_ID = '1522065658869714974'; 
 
 // Map untuk menyimpan relasi: ID_Pesan_Log -> { channelId: 'xxx', messageId: 'xxx' }
 const messageMapping = new Map();
