@@ -3,9 +3,30 @@ const { ChannelType } = require('discord.js');
 // ID Channel tujuan LOG di sini
 const LOG_CHANNEL_ID = '1499605521630625929'; 
 
+// 🔐 DAFTAR ID ROLE YANG DIIZINKAN MENGGUNAKAN PERINTAH INI
+const ALLOWED_STAFF_ROLES = [
+    '1499605520603025517', // ID Role Admin Anda
+    '1499605520661876856'  // ID Role Moderator Anda
+];
+
 // Nama fungsi disamakan dengan yang di-import pada index.js Anda
 async function handleFngLogs(interaction) {
-    // Ambil data input dari user
+    // 🛡️ PROSES PENGECEKAN ROLE STAF + OWNER SERVER
+    // 1. Periksa apakah pengguna adalah Pemilik Konten/Owner Server asli
+    const isOwner = interaction.user.id === interaction.guild.ownerId;
+
+    // 2. Periksa apakah pengguna memiliki salah satu role dari ALLOWED_STAFF_ROLES
+    const hasStaffRole = interaction.member.roles.cache.some(role => ALLOWED_STAFF_ROLES.includes(role.id));
+    
+    // Jika dia BUKAN owner DAN JUGA TIDAK memiliki role staf, maka akses diblokir
+    if (!isOwner && !hasStaffRole) {
+        return interaction.reply({
+            content: '❌ Anda tidak memiliki izin (Role Staf / Owner Server) untuk menggunakan perintah ini!',
+            ephemeral: true // Hanya bisa dilihat secara pribadi oleh user tersebut
+        });
+    }
+
+    // Ambil data input dari user jika lolos pengecekan izin di atas
     const fngRole = interaction.options.getRole('fng-role');
     const strike = interaction.options.getString('strike');
     const reason = interaction.options.getString('reason');
@@ -53,5 +74,5 @@ async function handleFngLogs(interaction) {
     }
 }
 
-// WAJIB DIEKSPOR: Agar bisa dibaca oleh const { handleFngLogsSlash } di index.js
+// WAJIB DIEKSPOR: Agar bisa dibaca oleh const { handleFngLogs } di index.js
 module.exports = { handleFngLogs };
