@@ -247,11 +247,21 @@ const { handleReminder } = require('./handlers/reminder');
 const { handleWarning } = require('./handlers/warning'); 
 const { handleSetMember } = require('./handlers/set-member'); 
 const { handleVerify, handleVerifyCommand } = require('./handlers/verify'); 
-const { handleBotRespon } = require('./handlers/botrespon'); // 👈 Import handler Anda
+const { handleBotRespon } = require('./handlers/botrespon'); 
+// 📷 IMPORT HANDLER BARU ANDA DI SINI
+const { handlePngLogsSetup, handlePngLogsInteraction } = require('./handlers/png-logs'); 
 
 
-// Event: Interaction (Slash Commands)
+// Event: Interaction (Slash Commands, Buttons, Menus, Modals)
 client.on('interactionCreate', async (interaction) => {
+    
+    // 📩 JALANKAN HANDLER INTERAKSI PNG LOGS DI SINI (karena tombol, menu, dan modal bukan ChatInputCommand)
+    try {
+        await handlePngLogsInteraction(interaction, client);
+    } catch (error) {
+        console.error('❌ Error pada handlePngLogsInteraction:', error);
+    }
+
     if (!interaction.isChatInputCommand()) return;
 
     try {
@@ -300,9 +310,13 @@ client.on('messageCreate', async (message) => {
     try {
         await handleWarning(message);
         await handleVerifyCommand(message); 
+        
+        // 📷 JALANKAN PERINTAH !setup-png-logs DI SINI
+        await handlePngLogsSetup(message); 
     } catch (error) {
         console.error('❌ Error pada Event messageCreate:', error);
     }
 });
 
 client.login(CONFIG.TOKEN);
+
