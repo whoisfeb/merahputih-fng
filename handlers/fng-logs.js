@@ -16,10 +16,10 @@ const activeSessions = new Map();
 const LOG_CHANNEL_ID = '1515008339904434427'; 
 
 // Fungsi 1: Menangani perintah teks !setup-png-logs
-async function handlePngLogsSetup(message) {
+async function handleFngLogsSetup(message) {
     if (message.author.bot) return;
 
-    if (message.content.toLowerCase() === '!setup-png-logs') {
+    if (message.content.toLowerCase() === '!setup-fng-logs') {
         const row = new ActionRowBuilder().addComponents(
             new ButtonBuilder()
                 .setCustomId('start_faction_log')
@@ -36,7 +36,7 @@ async function handlePngLogsSetup(message) {
 }
 
 // Fungsi 2: Menangani tombol, dropdown, dan modal submit
-async function handlePngLogsInteraction(interaction, client) {
+async function handleFngLogsInteraction(interaction, client) {
     // --- LANGKAH 1: Klik Tombol "Buat Faction Log" -> Muncul Dropdown Role ---
     if (interaction.isButton() && interaction.customId === 'start_faction_log') {
         const roles = interaction.guild.roles.cache
@@ -155,4 +155,4 @@ async function handlePngLogsInteraction(interaction, client) {
 }
 
 // Ekspor kedua fungsi agar bisa digunakan di index.js
-module.exports = { handlePngLogsSetup, handlePngLogsInteraction };
+module.exports = { handleFngLogsSetup, handleFngLogsInteraction };

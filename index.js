@@ -249,7 +249,7 @@ const { handleSetMember } = require('./handlers/set-member');
 const { handleVerify, handleVerifyCommand } = require('./handlers/verify'); 
 const { handleBotRespon } = require('./handlers/botrespon'); 
 // 📷 IMPORT HANDLER BARU ANDA DI SINI
-const { handlePngLogsSetup, handlePngLogsInteraction } = require('./handlers/png-logs'); 
+const { handleFngLogsSetup, handleFngLogsInteraction } = require('./handlers/fng-logs'); 
 
 
 // Event: Interaction (Slash Commands, Buttons, Menus, Modals)
