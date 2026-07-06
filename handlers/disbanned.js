@@ -1,7 +1,7 @@
 const { ChannelType } = require('discord.js');
 
 // ID Channel tujuan LOG Disbanment di sini
-const LOG_CHANNEL_ID = '1515243890838470796'; 
+const LOG_CHANNEL_ID = '1499605521630625929'; 
 
 // 🔐 DAFTAR ID ROLE YANG DIIZINKAN MENGGUNAKAN PERINTAH INI
 const ALLOWED_STAFF_ROLES = [
@@ -10,10 +10,9 @@ const ALLOWED_STAFF_ROLES = [
 ];
 
 // 🆔 DAFTAR ID ROLE YANG AKAN DICABUT DARI USER (FnG Lead & FnG Member)
-const FNG_LEAD_ROLE_ID = '1499605520603025515'; 
-const FNG_MEMBER_ROLE_ID = '1503361899629379654';
+const FNG_LEAD_ROLE_ID = 'ID_ROLE_FNG_LEAD_DI_SINI'; 
+const FNG_MEMBER_ROLE_ID = 'ID_ROLE_FNG_MEMBER_DI_SINI';
 
-// Fungsi utama penanganan Disbanned
 async function handleDisbanned(interaction) {
     // 🛡️ PROSES PENGECEKAN ROLE STAF + OWNER SERVER
     const isOwner = interaction.user.id === interaction.guild.ownerId;
@@ -29,58 +28,53 @@ async function handleDisbanned(interaction) {
     // ⏳ SOLUSI ERROR 10062: Amankan interaksi agar token tidak kedaluwarsa
     await interaction.deferReply({ ephemeral: true });
 
-    // Ambil data input dari user berdasarkan opsi perintah /disbanned
+    // Ambil data input dari user
     const fngRole = interaction.options.getRole('faction');
     const reason = interaction.options.getString('reason');
-    const timeQuarantine = interaction.options.getString('time'); // Contoh: "30 Days"
-    const attachment = interaction.options.getAttachment('gambar'); // Opsional (bisa Ctrl+V)
+    const timeQuarantine = interaction.options.getString('time'); // Contoh: "karantina 6 juli-13 juli(1/3)" atau "(2/3)"
+    const attachment = interaction.options.getAttachment('gambar');
 
-    // Cari channel log target
-    // Cari channel log target
+    // Cari channel log target (Mendukung Text & Announcement Channel)
     const logChannel = interaction.client.channels.cache.get(LOG_CHANNEL_ID);
-    
-    // PERBAIKAN: Memeriksa apakah channel mendukung pengiriman teks
     if (!logChannel || !logChannel.isTextBased()) {
         return interaction.editReply({ 
             content: '❌ Gagal mengirim log. Channel target tidak ditemukan atau tidak mendukung pesan teks.'
         });
     }
 
-
     try {
+        // 🔄 1. PROSES MENGUBAH NAMA ROLE FACTION
+        const oldRoleName = fngRole.name;
+        // Menggabungkan nama role awal dengan input time quarantine (Contoh: "Testing Bot (2/3)")
+        const newRoleName = `${oldRoleName} ${timeQuarantine}`; 
+        
+        // Eksekusi pengubahan nama role ke server Discord
+        await fngRole.setName(newRoleName).catch(err => {
+            console.error(`Gagal mengubah nama role Faction:`, err);
+        });
+
+        // 🔄 2. PROSES PENCABUTAN ROLE LEAD & MEMBER DARI ANGGOTA FACTION
         // Ambil data seluruh member di server untuk sinkronisasi cache terbaru
         const allMembers = await interaction.guild.members.fetch();
         
-        // Filter member yang memiliki Role Faction yang di-input
+        // Filter member yang memegang Role Faction tersebut sebelum namanya diubah
         const factionMembers = allMembers.filter(member => member.roles.cache.has(fngRole.id));
 
         let affectedUsersCount = 0;
 
-        // 🔄 LOOPING UNTUK PROSES EDIT USER (Hapus Role Lead/Member & Ganti Nama)
         for (const [memberId, member] of factionMembers) {
-            // 1. Hapus Role FnG Lead & FnG Member jika mereka punya (Tanpa hapus Role Faction utama)
             const rolesToRemove = [];
             if (member.roles.cache.has(FNG_LEAD_ROLE_ID)) rolesToRemove.push(FNG_LEAD_ROLE_ID);
             if (member.roles.cache.has(FNG_MEMBER_ROLE_ID)) rolesToRemove.push(FNG_MEMBER_ROLE_ID);
 
+            // Cabut role FnG Lead/Member (Role Faction utama/yang diganti namanya tetap aman menempel)
             if (rolesToRemove.length > 0) {
-                await member.roles.remove(rolesToRemove).catch(err => console.error(`Gagal menghapus role dari ${member.user.tag}:`, err));
+                await member.roles.remove(rolesToRemove).catch(err => console.error(`Gagal mencabut role dari ${member.user.tag}:`, err));
             }
-
-            // 2. Ubah nickname menjadi: "Nama Awal [Spasi] Time Quarantine"
-            // Menggunakan member.displayName agar mengambil nama panggilan saat ini/nama asli discord jika belum diset nick-nya
-            const currentName = member.displayName;
-            const newNickname = `${currentName} ${timeQuarantine}`.substring(0, 32); // Limit karakter discord maks 32
-
-            // Proses ganti nama (Bypass jika user tersebut adalah Owner Server karena bot tidak bisa ubah nama Owner)
-            if (member.id !== interaction.guild.ownerId) {
-                await member.setNickname(newNickname).catch(err => console.error(`Gagal mengubah nama ${member.user.tag}:`, err));
-            }
-
             affectedUsersCount++;
         }
 
-        // Susun teks format pesan log sesuai permintaan
+        // 📝 3. SUSUN TEKS FORMAT PESAN LOG
         const outputMessage = `**Disbanment Logs**\n\n` +
                               `Faction : <@&${fngRole.id}>\n\n` +
                               `Reason : ${reason}\n\n` +
@@ -101,9 +95,10 @@ async function handleDisbanned(interaction) {
         
         // Respons sukses ke staf yang mengeksekusi perintah
         await interaction.editReply({ 
-            content: `✅ Faction **${fngRole.name}** berhasil di-disbanned!\n` +
+            content: `✅ Faction **${oldRoleName}** berhasil di-disbanned!\n` +
+                     `🔹 Nama role diubah menjadi: **${newRoleName}**\n` +
                      `🔹 Log dikirim ke <#${LOG_CHANNEL_ID}>.\n` +
-                     `🔹 Total **${affectedUsersCount} member** diproses (Role FnG dihapus & Nickname diubah ke format waktu quarantine).`
+                     `🔹 Total **${affectedUsersCount} member** dibersihkan dari role Lead/Member FnG.`
         });
 
     } catch (error) {
@@ -114,5 +109,4 @@ async function handleDisbanned(interaction) {
     }
 }
 
-// Ekspor fungsi agar bisa dipanggil di index.js atau command handler utama Anda
 module.exports = { handleDisbanned };
