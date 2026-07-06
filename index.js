@@ -250,7 +250,39 @@ const commands = [
                 required: false
             }
         ]
+    },
+
+    {
+        name: 'disbanned',
+        description: 'Melakukan pembubaran resmi (disbanned) pada faction beserta log dan karantina.',
+        options: [
+            {
+                name: 'faction',
+                type: 8, // 8 adalah tipe data untuk ROLE
+                description: 'Pilih Faction / Role FNG yang akan di-disbanned',
+                required: true
+            },
+            {
+                name: 'reason',
+                type: 3, // 3 adalah tipe data untuk STRING
+                description: 'Masukkan alasan pembubaran/disbanned faction',
+                required: true
+            },
+            {
+                name: 'time',
+                type: 3, // 3 adalah tipe data untuk STRING
+                description: 'Masukkan waktu karantina (Contoh: [30 Days] atau [Karantina])',
+                required: true
+            },
+            {
+                name: 'gambar',
+                type: 11, // 11 adalah tipe data untuk ATTACHMENT (Mendukung Ctrl+V)
+                description: 'Upload / Paste berkas bukti gambar di sini (Opsional)',
+                required: false
+            }
+        ]
     }
+
 
 ];
 
@@ -289,6 +321,9 @@ const { handleBotRespon } = require('./handlers/botrespon');
 
 // 📷 IMPORT HANDLER BARU (Disamakan menjadi handleFngLogs)
 const { handleFngLogs } = require('./handlers/fng-logs'); 
+// 🚫 IMPORT HANDLER DISBANNED
+const { handleDisbanned } = require('./handlers/disbanned');
+
 
 
 // Event: Interaction (Slash Commands, Buttons, Menus, Modals)
@@ -318,6 +353,11 @@ client.on('interactionCreate', async (interaction) => {
             return await handleFngLogs(interaction);
         }
 
+        // 🚫 JALANKAN SLASH COMMAND DISBANNED DI SINI
+        if (interaction.commandName === 'disbanned') {
+            return await handleDisbanned(interaction);
+        }
+
     } catch (error) {
         console.error('❌ Error:', error);
         try {
@@ -331,6 +371,7 @@ client.on('interactionCreate', async (interaction) => {
         }
     }
 });
+
 
 
 // Event Ready
