@@ -37,13 +37,18 @@ async function handleFngLogs(interaction) {
     const attachment = interaction.options.getAttachment('gambar');
 
     // Cari channel log target
+    // Cari channel log target
     const logChannel = interaction.client.channels.cache.get(LOG_CHANNEL_ID);
-    if (!logChannel || logChannel.type !== ChannelType.GuildText) {
-        // PERBAIKAN: Menggunakan editReply karena status interaksi sudah di-defer
+
+    // PERBAIKAN: Masukkan GuildAnnouncement ke dalam daftar tipe yang diizinkan
+    const tipeChannelAman = [ChannelType.GuildText, ChannelType.GuildAnnouncement];
+
+    if (!logChannel || !tipeChannelAman.includes(logChannel.type)) {
         return interaction.editReply({ 
-            content: '❌ Gagal mengirim log. Channel target tidak ditemukan atau dikonfigurasi salah.'
+            content: '❌ Gagal mengirim log. Channel target tidak ditemukan atau jenis channel tidak didukung.'
         });
     }
+
 
     // Susun teks format pesan log
     const outputMessage = `**Faction Logs**\n\n` +
