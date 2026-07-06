@@ -36,12 +36,16 @@ async function handleDisbanned(interaction) {
     const attachment = interaction.options.getAttachment('gambar'); // Opsional (bisa Ctrl+V)
 
     // Cari channel log target
+    // Cari channel log target
     const logChannel = interaction.client.channels.cache.get(LOG_CHANNEL_ID);
-    if (!logChannel || logChannel.type !== ChannelType.GuildText) {
+    
+    // PERBAIKAN: Memeriksa apakah channel mendukung pengiriman teks
+    if (!logChannel || !logChannel.isTextBased()) {
         return interaction.editReply({ 
-            content: '❌ Gagal mengirim log. Channel target tidak ditemukan atau dikonfigurasi salah.'
+            content: '❌ Gagal mengirim log. Channel target tidak ditemukan atau tidak mendukung pesan teks.'
         });
     }
+
 
     try {
         // Ambil data seluruh member di server untuk sinkronisasi cache terbaru
