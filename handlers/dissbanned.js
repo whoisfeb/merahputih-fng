@@ -1,7 +1,7 @@
 const { ChannelType } = require('discord.js');
 
 // ID Channel tujuan LOG Disbanment di sini
-const LOG_CHANNEL_ID = '1499605521630625929'; 
+const LOG_CHANNEL_ID = '1515243890838470796'; 
 
 // 🔐 DAFTAR ID ROLE YANG DIIZINKAN MENGGUNAKAN PERINTAH INI
 const ALLOWED_STAFF_ROLES = [
@@ -10,8 +10,8 @@ const ALLOWED_STAFF_ROLES = [
 ];
 
 // 🆔 DAFTAR ID ROLE YANG AKAN DICABUT DARI USER (FnG Lead & FnG Member)
-const FNG_LEAD_ROLE_ID = 'ID_ROLE_FNG_LEAD_DI_SINI'; 
-const FNG_MEMBER_ROLE_ID = 'ID_ROLE_FNG_MEMBER_DI_SINI';
+const FNG_LEAD_ROLE_ID = '1499605520603025515'; 
+const FNG_MEMBER_ROLE_ID = '1503361899629379654';
 
 // Fungsi utama penanganan Disbanned
 async function handleDisbanned(interaction) {
