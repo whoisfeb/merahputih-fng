@@ -1,6 +1,7 @@
 const { PermissionFlagsBits, EmbedBuilder, MessageFlags, ChannelType, OverwriteType } = require('discord.js');
 
 const LOG_CHANNEL_ID = process.env.LOG_CHANNEL_ID;
+const CITIZEN_ROLE_ID = '1499605520603025512'; // Role citizen otomatis VIEW-only
 
 // Helper untuk mengirim log
 function sendLog(guild, embed) {
@@ -13,8 +14,6 @@ function sendLog(guild, embed) {
 
 // Format nama channel dari FNG name
 // Contoh: "❤ Titik Kumpul" -> "❤〢titik-kumpul"
-// Format nama channel dari FNG name
-// Format nama channel dari FNG name
 function formatChannelName(fngName) {
     const trimmed = fngName.trim();
     
@@ -139,7 +138,6 @@ async function handleAddFng(interaction) {
         });
 
         // Kumpulkan semua permission untuk channel ABOUT (Send Messages untuk role utama)
-                // Kumpulkan semua permission untuk channel ABOUT
         const aboutPermissions = [
             {
                 id: interaction.guild.id, // <--- Mengunci akses untuk @everyone
@@ -197,9 +195,16 @@ async function handleAddFng(interaction) {
             }
         ];
 
+        // Beri akses VIEW-only untuk role citizen jika ada di guild
+        const citizenRole = interaction.guild.roles.cache.get(CITIZEN_ROLE_ID);
+        if (citizenRole) {
+            aboutPermissions.push(createPermissionByType(citizenRole.id, 'VIEW'));
+            activityPermissions.push(createPermissionByType(citizenRole.id, 'VIEW'));
+        } else {
+            console.log(`[ADD-FNG] Citizen role ${CITIZEN_ROLE_ID} tidak ditemukan di guild ${interaction.guild.id}`);
+        }
 
         // Tambahkan role1-2 dengan permission1-2 jika ada
-                // Tambahkan role1-2 dengan permission1-2 jika diisi oleh admin
         let additionalRolesInfo = '';
         for (let i = 1; i <= 2; i++) {
             const role = interaction.options.getRole(`role${i}`);
@@ -244,7 +249,7 @@ async function handleAddFng(interaction) {
             reason: `Channel Activity untuk FNG ${fngName}`
         });
 
-        // Buat embed untuk user (Warna embed mengikuti input warna kustom)
+        // Buat embed untuk user (Warna embed mengikuti input kustom)
         const successEmbed = new EmbedBuilder()
             .setTitle('🆕 FNG Berhasil Dibuat')
             .setColor(inputColor) // <--- Mengikuti input kustom admin
