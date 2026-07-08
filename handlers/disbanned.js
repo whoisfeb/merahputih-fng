@@ -20,7 +20,7 @@ async function handleDisbanned(interaction) {
     
     if (!isOwner && !hasStaffRole) {
         return interaction.reply({
-            content: '❌ Anda tidak memiliki izin (Role Staf / Owner Server) untuk menggunakan perintah ini!',
+            content: '❌ Anda tidak memiliki izin untuk menggunakan perintah ini!',
             ephemeral: true 
         });
     }
