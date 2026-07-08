@@ -25,6 +25,12 @@ const KARANTINA_CONFIG = {
   ALLOWED_THREAD_IDS: ['1519223852868173944']
 };
 
+// helper untuk mention semua team roles di summary
+function teamMentions() {
+  if (!Array.isArray(KARANTINA_CONFIG.TEAM_ROLE_IDS) || KARANTINA_CONFIG.TEAM_ROLE_IDS.length === 0) return '';
+  return KARANTINA_CONFIG.TEAM_ROLE_IDS.map(id => `<@&${id}>`).join(' ');
+}
+
 // ============================================
 // Legacy parser (untuk format "LOGS KARANTINA")
 // ============================================
@@ -128,8 +134,10 @@ function formatDateId(date) {
 
 // ============================================
 // PROCESS FnG flow (OUT flow)
-// - remove roles except verify and team (staff/admin), also remove FNG_MEMBER & FNG_LEAD
+// - remove roles except VERIFY_ROLE_ID and TEAM_ROLE_IDS
+// - also remove FNG_MEMBER & FNG_LEAD
 // - update nickname to periode | baseName
+// - logs reasons for skipped roles (managed/position/etc.)
 // ============================================
 async function processFnGMessage(message, parsed) {
   const guild = message.guild;
@@ -210,53 +218,99 @@ async function processFnGMessage(message, parsed) {
         }
       }
 
-      const removeAllExceptVerify = (roleMentions.length === 0 && roleNames.length === 0);
+      // If no specific roles listed, remove ALL roles except verify and team roles
+      const removeAllExceptKeep = (roleMentions.length === 0 && roleNames.length === 0);
 
-      if (removeAllExceptVerify) {
+      // debug: print member roles before removal
+      console.log('[AUTO-KARANTINA DEBUG] member roles BEFORE removal for', member.user.tag, ':',
+        member.roles.cache.map(r => ({ id: r.id, name: r.name, position: r.position, managed: r.managed })));
+
+      if (removeAllExceptKeep) {
         for (const [rid, role] of member.roles.cache) {
           if (rid === guild.id) continue; // @everyone
-          if (rid === KARANTINA_CONFIG.VERIFY_ROLE_ID) continue; // keep verify
-          if (rid === KARANTINA_CONFIG.TEAM_ROLE_ID) continue; // keep staff/admin by mapping
+          if (rid === KARANTINA_CONFIG.VERIFY_ROLE_ID) {
+            console.log(`[AUTO-KARANTINA] keep role ${role.name} (${rid}) — verify role`);
+            continue;
+          }
+          const isTeamRole = Array.isArray(KARANTINA_CONFIG.TEAM_ROLE_IDS) && KARANTINA_CONFIG.TEAM_ROLE_IDS.includes(rid);
+          if (isTeamRole) {
+            console.log(`[AUTO-KARANTINA] keep role ${role.name} (${rid}) — listed in TEAM_ROLE_IDS`);
+            continue;
+          }
+
           const roleObj = guild.roles.cache.get(rid);
-          if (!roleObj) continue;
-          if (roleObj.managed) continue; // cannot remove managed roles
-          if (roleObj.position >= botMember.roles.highest.position) continue; // cannot remove roles >= bot
+          if (!roleObj) { console.log(`[AUTO-KARANTINA] skip unknown role id ${rid}`); continue; }
+          if (roleObj.managed) {
+            console.log(`[AUTO-KARANTINA] skip role ${roleObj.name} (${rid}) — managed role (cannot remove)`);
+            continue;
+          }
+          if (roleObj.position >= botMember.roles.highest.position) {
+            console.log(`[AUTO-KARANTINA] skip role ${roleObj.name} (${rid}) — position (${roleObj.position}) >= bot role position (${botMember.roles.highest.position})`);
+            continue;
+          }
+
           try {
             await member.roles.remove(rid);
             res.rolesRemoved.push(roleObj.name);
+            console.log(`[AUTO-KARANTINA] removed role ${roleObj.name} (${rid}) from ${member.user.tag}`);
           } catch (err) {
-            console.warn(`[AUTO-KARANTINA] failed to remove role ${roleObj.name} from ${member.user.tag}:`, err?.message || err);
+            console.warn(`[AUTO-KARANTINA] failed to remove role ${roleObj.name} (${rid}):`, err?.message || err);
           }
         }
       } else {
         for (const rid of Array.from(rolesToRemoveSet)) {
           if (!rid) continue;
+          if (!member.roles.cache.has(rid)) continue;
           const roleObj = guild.roles.cache.get(rid);
           if (!roleObj) continue;
-          if (!member.roles.cache.has(rid)) continue;
-          if (roleObj.managed) continue;
-          if (rid === KARANTINA_CONFIG.TEAM_ROLE_ID) continue; // do not remove mapped staff role
-          if (roleObj.position >= botMember.roles.highest.position) continue;
+          // keep verify/team even if listed (safety)
+          if (rid === KARANTINA_CONFIG.VERIFY_ROLE_ID) {
+            console.log(`[AUTO-KARANTINA] not removing ${roleObj.name} (${rid}) — it's VERIFY_ROLE_ID`);
+            continue;
+          }
+          const isTeamRole = Array.isArray(KARANTINA_CONFIG.TEAM_ROLE_IDS) && KARANTINA_CONFIG.TEAM_ROLE_IDS.includes(rid);
+          if (isTeamRole) {
+            console.log(`[AUTO-KARANTINA] not removing ${roleObj.name} (${rid}) — it's listed in TEAM_ROLE_IDS`);
+            continue;
+          }
+          if (roleObj.managed) {
+            console.log(`[AUTO-KARANTINA] skip ${roleObj.name} (${rid}) — managed`);
+            continue;
+          }
+          if (roleObj.position >= botMember.roles.highest.position) {
+            console.log(`[AUTO-KARANTINA] skip ${roleObj.name} (${rid}) — position >= bot`);
+            continue;
+          }
           try {
             await member.roles.remove(rid);
             res.rolesRemoved.push(roleObj.name || rid);
+            console.log(`[AUTO-KARANTINA] removed listed role ${roleObj.name} (${rid}) from ${member.user.tag}`);
           } catch (err) {
             console.warn(`[AUTO-KARANTINA] failed to remove listed role ${roleObj.name}:`, err?.message || err);
           }
         }
       }
 
-      // Ensure mandatory FNG roles removed
+      // Ensure mandatory FNG roles removed (try again after bulk removal)
       for (const mustRid of mandatoryRemove) {
         if (!mustRid) continue;
-        if (member.roles.cache.has(mustRid)) {
-          const roleObj = guild.roles.cache.get(mustRid);
-          if (!roleObj) continue;
-          if (roleObj.position >= botMember.roles.highest.position) continue;
-          try {
-            await member.roles.remove(mustRid);
-            if (!res.rolesRemoved.includes(roleObj.name)) res.rolesRemoved.push(roleObj.name);
-          } catch (err) { /* ignore */ }
+        if (!member.roles.cache.has(mustRid)) continue;
+        const roleObj = guild.roles.cache.get(mustRid);
+        if (!roleObj) continue;
+        if (roleObj.managed) {
+          console.log(`[AUTO-KARANTINA] could not remove mandatory role ${roleObj.name} (${mustRid}) — managed`);
+          continue;
+        }
+        if (roleObj.position >= botMember.roles.highest.position) {
+          console.log(`[AUTO-KARANTINA] could not remove mandatory role ${roleObj.name} (${mustRid}) — position >= bot`);
+          continue;
+        }
+        try {
+          await member.roles.remove(mustRid);
+          if (!res.rolesRemoved.includes(roleObj.name)) res.rolesRemoved.push(roleObj.name);
+          console.log(`[AUTO-KARANTINA] removed mandatory role ${roleObj.name} (${mustRid})`);
+        } catch (err) {
+          console.warn(`[AUTO-KARANTINA] failed to remove mandatory role ${roleObj.name} (${mustRid}):`, err?.message || err);
         }
       }
 
@@ -379,9 +433,6 @@ function setupAutoKarantinaHandler(client) {
               try { await member.setNickname(newNick); } catch (err) { /* ignore */ }
             }
 
-            // Legacy behaviour: previously added karantina role; removed per request.
-            // If you want legacy to remove roles similarly to FnG OUT, we can change it.
-
           } catch (err) {
             res.error = String(err.message || err);
           }
@@ -404,7 +455,7 @@ function setupAutoKarantinaHandler(client) {
             .setTimestamp()
             .setFooter({ text: 'Auto Karantina System' });
 
-          await message.channel.send({ content: `<@&${KARANTINA_CONFIG.TEAM_ROLE_ID}>`, embeds: [summaryEmbed] });
+          await message.channel.send({ content: teamMentions(), embeds: [summaryEmbed] });
         } catch (err) {
           console.error('[AUTO-KARANTINA] ❌ gagal mengirim summary embed (legacy):', err?.message || err);
         }
@@ -436,7 +487,7 @@ function setupAutoKarantinaHandler(client) {
             .setTimestamp()
             .setFooter({ text: 'Auto Karantina System (FnG)' });
 
-          await message.channel.send({ content: `<@&${KARANTINA_CONFIG.TEAM_ROLE_ID}>`, embeds: [summaryEmbed] });
+          await message.channel.send({ content: teamMentions(), embeds: [summaryEmbed] });
         } catch (err) {
           console.error('[AUTO-KARANTINA] ❌ gagal memproses FnG flow:', err);
         }
