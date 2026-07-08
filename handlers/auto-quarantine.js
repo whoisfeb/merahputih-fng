@@ -2,7 +2,7 @@ const { EmbedBuilder, PermissionFlagsBits } = require('discord.js');
 
 // ============================================
 // CONFIG - SESUAIKAN DENGAN SERVER ANDA
-// (FACTION_ROLE_IDS telah dihapus)
+// (FACTION_ROLE_IDS telah dihapus))
 // ============================================
 const KARANTINA_CONFIG = {
     KARANTINA_CHANNEL_ID: '1516163567739600927',
