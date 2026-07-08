@@ -323,6 +323,7 @@ const { handleBotRespon } = require('./handlers/botrespon');
 const { handleFngLogs } = require('./handlers/fng-logs'); 
 // 🚫 IMPORT HANDLER DISBANNED
 const { handleDisbanned } = require('./handlers/disbanned');
+const { setupAutoKarantinaHandler } = require('./handlers/auto-quarantine');
 
 
 
@@ -381,6 +382,7 @@ client.once('ready', (readyClient) => {
     handleReminder(readyClient);
     handleVerify(readyClient); 
     handleBotRespon(readyClient); 
+    setupAutoKarantinaHandler(client);
 });
 
 
