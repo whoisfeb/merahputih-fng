@@ -4,21 +4,25 @@ async function handleSay(interaction) {
     const allowedRoleId = "1499605520603025517";
     const logChannelId = "1499605521416847512";
 
-    // Cek permission role
-    if (!interaction.member.roles.cache.has(allowedRoleId)) {
+    // 1. Cek apakah user adalah owner server ATAU punya role staff
+    const isOwner = interaction.guild.ownerId === interaction.user.id;
+    const hasStaffRole = interaction.member.roles.cache.has(allowedRoleId);
+
+    // Jika BUKAN owner DAN TIDAK PUNYA role staff, maka akses ditolak
+    if (!isOwner && !hasStaffRole) {
         return interaction.reply({
             content: '❌ Kamu tidak memiliki izin untuk menggunakan command ini.',
             ephemeral: true
         });
     }
 
-    // 1. Ambil input string mentah dari Discord
+    // 2. Ambil input string mentah dari Discord
     const rawMessage = interaction.options.getString('message');
     
-    // 2. Mengonversi ketikan \n manual menjadi enter ke bawah
+    // 3. Mengonversi ketikan \n manual menjadi enter ke bawah
     const message = rawMessage ? rawMessage.split('\\n').join('\n') : '';
 
-    // 3. Mengambil file pilihan (opsional) - Mendukung Ctrl + V gambar
+    // 4. Mengambil file pilihan (opsional) - Mendukung Ctrl + V gambar
     const attachment = interaction.options.getAttachment('file');
 
     // Mengambil channel pilihan jika diisi, jika kosong gunakan channel saat ini
