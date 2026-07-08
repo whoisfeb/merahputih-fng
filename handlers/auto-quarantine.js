@@ -14,7 +14,7 @@ const KARANTINA_CONFIG = {
   ],
 
   // Role karantina (akan DITAMBAHKAN setelah pembersihan)
-  KARANTINA_ROLE_ID: '1392382455914172494',
+  KARANTINA_ROLE_ID: '1519393231245279322',
 
   // Tambahan untuk FnG flow
   FNG_MEMBER_ROLE_ID: '1503361899629379654',
