@@ -167,6 +167,14 @@ async function processFnGMessage(message, parsed) {
 
   try { await guild.members.fetch({ limit: 1000 }); } catch (err) { /* ignore */ }
 
+  // helper keep-role check
+  const isKeepRole = (rid) => {
+    if (rid === guild.id) return true; // @everyone
+    if (rid === KARANTINA_CONFIG.VERIFY_ROLE_ID) return true;
+    if (Array.isArray(KARANTINA_CONFIG.TEAM_ROLE_IDS) && KARANTINA_CONFIG.TEAM_ROLE_IDS.includes(rid)) return true;
+    return false;
+  };
+
   for (const userId of targets) {
     const res = {
       identifier: userId,
@@ -185,6 +193,7 @@ async function processFnGMessage(message, parsed) {
         continue;
       }
 
+      // Safety: role hierarchy
       if (member.roles.highest.position >= botMember.roles.highest.position) {
         res.error = 'Role member lebih tinggi dari bot (tidak bisa diubah)';
         results.push(res);
@@ -194,8 +203,19 @@ async function processFnGMessage(message, parsed) {
       res.found = true;
       res.oldNickname = member.nickname || member.user.username;
 
-      let baseName = (member.nickname || member.user.username).split('|').map(p => p.trim()).filter(Boolean);
-      baseName = baseName.length ? baseName[baseName.length - 1] : member.user.username;
+      // Extract baseName: if nickname contains '|', take last segment; else use nickname/username
+      const display = member.nickname || member.user.username || member.user.username;
+      let baseName;
+      if (display.includes('|')) {
+        const parts = display.split('|').map(p => p.trim()).filter(Boolean);
+        baseName = parts.length ? parts[parts.length - 1] : display;
+      } else {
+        baseName = display;
+      }
+      // Remove extra non-name tokens (optional): trim
+      baseName = baseName.trim();
+
+      // Build new nickname: "periode | baseName"
       let newNick = `${waktuKarantinaStr} | ${baseName}`;
       if (newNick.length > 32) {
         const allowed = 32 - (`${waktuKarantinaStr} | `).length;
@@ -206,7 +226,9 @@ async function processFnGMessage(message, parsed) {
 
       try {
         if ((member.nickname || member.user.username) !== newNick) await member.setNickname(newNick);
-      } catch (err) { /* ignore */ }
+      } catch (err) {
+        console.warn('[AUTO-KARANTINA] warn setNickname failed:', err?.message || err);
+      }
 
       const mandatoryRemove = [KARANTINA_CONFIG.FNG_MEMBER_ROLE_ID, KARANTINA_CONFIG.FNG_LEAD_ROLE_ID].filter(Boolean);
       const rolesToRemoveSet = new Set(mandatoryRemove.concat(roleMentions));
@@ -221,34 +243,30 @@ async function processFnGMessage(message, parsed) {
       // If no specific roles listed, remove ALL roles except verify and team roles
       const removeAllExceptKeep = (roleMentions.length === 0 && roleNames.length === 0);
 
+      // Log bot top role position
+      const botTopPos = botMember.roles.highest.position;
+      console.log(`[AUTO-KARANTINA] bot highest role position = ${botTopPos}`);
+
       // debug: print member roles before removal
       console.log('[AUTO-KARANTINA DEBUG] member roles BEFORE removal for', member.user.tag, ':',
         member.roles.cache.map(r => ({ id: r.id, name: r.name, position: r.position, managed: r.managed })));
 
       if (removeAllExceptKeep) {
-        for (const [rid, role] of member.roles.cache) {
-          if (rid === guild.id) continue; // @everyone
-          if (rid === KARANTINA_CONFIG.VERIFY_ROLE_ID) {
-            console.log(`[AUTO-KARANTINA] keep role ${role.name} (${rid}) — verify role`);
+        // remove roles not in keep list
+        for (const [rid, roleObj] of Array.from(member.roles.cache)) {
+          if (isKeepRole(rid)) {
+            console.log(`[AUTO-KARANTINA] keep role ${roleObj.name} (${rid})`);
             continue;
           }
-          const isTeamRole = Array.isArray(KARANTINA_CONFIG.TEAM_ROLE_IDS) && KARANTINA_CONFIG.TEAM_ROLE_IDS.includes(rid);
-          if (isTeamRole) {
-            console.log(`[AUTO-KARANTINA] keep role ${role.name} (${rid}) — listed in TEAM_ROLE_IDS`);
-            continue;
-          }
-
-          const roleObj = guild.roles.cache.get(rid);
           if (!roleObj) { console.log(`[AUTO-KARANTINA] skip unknown role id ${rid}`); continue; }
           if (roleObj.managed) {
             console.log(`[AUTO-KARANTINA] skip role ${roleObj.name} (${rid}) — managed role (cannot remove)`);
             continue;
           }
-          if (roleObj.position >= botMember.roles.highest.position) {
-            console.log(`[AUTO-KARANTINA] skip role ${roleObj.name} (${rid}) — position (${roleObj.position}) >= bot role position (${botMember.roles.highest.position})`);
+          if (roleObj.position >= botTopPos) {
+            console.log(`[AUTO-KARANTINA] skip role ${roleObj.name} (${rid}) — position (${roleObj.position}) >= botTopPos (${botTopPos})`);
             continue;
           }
-
           try {
             await member.roles.remove(rid);
             res.rolesRemoved.push(roleObj.name);
@@ -258,27 +276,23 @@ async function processFnGMessage(message, parsed) {
           }
         }
       } else {
+        // remove only explicitly listed roles
         for (const rid of Array.from(rolesToRemoveSet)) {
           if (!rid) continue;
           if (!member.roles.cache.has(rid)) continue;
+          if (isKeepRole(rid)) {
+            const rObj = guild.roles.cache.get(rid);
+            console.log(`[AUTO-KARANTINA] not removing ${rObj ? rObj.name : rid} (${rid}) — it's KEEP role`);
+            continue;
+          }
           const roleObj = guild.roles.cache.get(rid);
           if (!roleObj) continue;
-          // keep verify/team even if listed (safety)
-          if (rid === KARANTINA_CONFIG.VERIFY_ROLE_ID) {
-            console.log(`[AUTO-KARANTINA] not removing ${roleObj.name} (${rid}) — it's VERIFY_ROLE_ID`);
-            continue;
-          }
-          const isTeamRole = Array.isArray(KARANTINA_CONFIG.TEAM_ROLE_IDS) && KARANTINA_CONFIG.TEAM_ROLE_IDS.includes(rid);
-          if (isTeamRole) {
-            console.log(`[AUTO-KARANTINA] not removing ${roleObj.name} (${rid}) — it's listed in TEAM_ROLE_IDS`);
-            continue;
-          }
           if (roleObj.managed) {
             console.log(`[AUTO-KARANTINA] skip ${roleObj.name} (${rid}) — managed`);
             continue;
           }
-          if (roleObj.position >= botMember.roles.highest.position) {
-            console.log(`[AUTO-KARANTINA] skip ${roleObj.name} (${rid}) — position >= bot`);
+          if (roleObj.position >= botTopPos) {
+            console.log(`[AUTO-KARANTINA] skip ${roleObj.name} (${rid}) — position >= botTopPos`);
             continue;
           }
           try {
@@ -294,6 +308,7 @@ async function processFnGMessage(message, parsed) {
       // Ensure mandatory FNG roles removed (try again after bulk removal)
       for (const mustRid of mandatoryRemove) {
         if (!mustRid) continue;
+        // refresh cache flag by checking member.roles.cache
         if (!member.roles.cache.has(mustRid)) continue;
         const roleObj = guild.roles.cache.get(mustRid);
         if (!roleObj) continue;
@@ -301,7 +316,7 @@ async function processFnGMessage(message, parsed) {
           console.log(`[AUTO-KARANTINA] could not remove mandatory role ${roleObj.name} (${mustRid}) — managed`);
           continue;
         }
-        if (roleObj.position >= botMember.roles.highest.position) {
+        if (roleObj.position >= botTopPos) {
           console.log(`[AUTO-KARANTINA] could not remove mandatory role ${roleObj.name} (${mustRid}) — position >= bot`);
           continue;
         }
@@ -312,6 +327,30 @@ async function processFnGMessage(message, parsed) {
         } catch (err) {
           console.warn(`[AUTO-KARANTINA] failed to remove mandatory role ${roleObj.name} (${mustRid}):`, err?.message || err);
         }
+      }
+
+      // SECOND PASS: re-fetch member and try removing any remaining removable roles
+      try {
+        const refreshed = await guild.members.fetch(member.id);
+        const remaining = refreshed.roles.cache.filter(r => !isKeepRole(r.id) && !r.managed && r.position < botTopPos);
+        if (remaining.size > 0) {
+          console.log('[AUTO-KARANTINA] second pass removal, remaining removable roles:', remaining.map(r => ({ id: r.id, name: r.name, pos: r.position })));
+          for (const [rid, rObj] of Array.from(remaining)) {
+            try {
+              await refreshed.roles.remove(rid);
+              if (!res.rolesRemoved.includes(rObj.name)) res.rolesRemoved.push(rObj.name);
+              console.log(`[AUTO-KARANTINA] second-pass removed ${rObj.name} (${rid})`);
+            } catch (err) {
+              console.warn(`[AUTO-KARANTINA] second-pass failed to remove ${rObj.name} (${rid}):`, err?.message || err);
+            }
+          }
+        }
+        // final fetch for after state
+        const after = await guild.members.fetch(member.id);
+        console.log('[AUTO-KARANTINA DEBUG] member roles AFTER removal for', after.user.tag, ':',
+          after.roles.cache.map(r => ({ id: r.id, name: r.name, position: r.position, managed: r.managed })));
+      } catch (err) {
+        console.warn('[AUTO-KARANTINA] failed second-pass removal/fetch:', err?.message || err);
       }
 
     } catch (err) {
@@ -413,13 +452,14 @@ function setupAutoKarantinaHandler(client) {
             const currentDisplayName = member.nickname || member.user.username;
             res.oldNickname = currentDisplayName;
 
-            let parts = currentDisplayName.split('|').map(p => p.trim()).filter(Boolean);
+            // Try to compute baseName similar to FnG flow
             let baseName;
-            if (parts.length > 1) {
-              if (parts[0].toUpperCase() === 'KARANTINA') baseName = parts.slice(1).join(' | ');
-              else baseName = parts[parts.length - 1];
-            } else baseName = parts[0] || member.user.username;
+            if (currentDisplayName.includes('|')) {
+              const parts = currentDisplayName.split('|').map(p => p.trim()).filter(Boolean);
+              baseName = parts.length ? parts[parts.length - 1] : currentDisplayName;
+            } else baseName = currentDisplayName;
             baseName = baseName.trim();
+
             const prefix = 'KARANTINA | ';
             let newNick = `${prefix}${baseName}`;
             if (newNick.length > 32) {
