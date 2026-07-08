@@ -1,7 +1,7 @@
 const { EmbedBuilder } = require('discord.js');
 
 async function handleSay(interaction) {
-    const allowedRoleId = "1499605520603025516";
+    const allowedRoleId = "1499605520603025517";
     const logChannelId = "1499605521416847512";
 
     // Cek permission role
