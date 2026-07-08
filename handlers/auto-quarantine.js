@@ -2,19 +2,10 @@ const { EmbedBuilder, PermissionFlagsBits } = require('discord.js');
 
 // ============================================
 // CONFIG - SESUAIKAN DENGAN SERVER ANDA
+// (FACTION_ROLE_IDS telah dihapus)
 // ============================================
 const KARANTINA_CONFIG = {
     KARANTINA_CHANNEL_ID: '1516163567739600927',
-    FACTION_ROLE_IDS: [
-        '1392382455914172492',
-        '1392382455914172491',
-        '1392382455876550804',
-        '1392382455914172490',
-        '1392382455876550800',
-        '1392382455876550802',
-        '1392382455876550801',
-        '1392382455876550803',
-    ],
     KARANTINA_ROLE_ID: '1392382455914172494',
     TEAM_ROLE_ID: '1392382455947989066',
 
@@ -324,7 +315,7 @@ function setupAutoKarantinaHandler(client) {
             const karantinaData = parseKarantinaMessage(message.content);
             if (karantinaData.isValid) {
                 console.log('[AUTO-KARANTINA] Format lama ditemukan, memproses (legacy flow)...');
-                // existing legacy flow (tidak berubah)
+                // existing legacy flow (tidak berubah kecuali faction removal dihapus)
                 const guild = message.guild;
                 const results = [];
 
@@ -420,17 +411,8 @@ function setupAutoKarantinaHandler(client) {
                             }
                         }
 
-                        // remove faction roles
-                        for (const roleId of KARANTINA_CONFIG.FACTION_ROLE_IDS) {
-                            if (member.roles.cache.has(roleId)) {
-                                try {
-                                    const role = guild.roles.cache.get(roleId);
-                                    const roleName = role ? role.name : roleId;
-                                    await member.roles.remove(roleId);
-                                    res.rolesRemoved.push(roleName);
-                                } catch (err) { /* ignore per-role */ }
-                            }
-                        }
+                        // NOTE: Removal of FACTION_ROLE_IDS has been removed per request.
+                        // If you want to remove specific roles here, add logic.
 
                         // add karantina role
                         const karRole = guild.roles.cache.get(KARANTINA_CONFIG.KARANTINA_ROLE_ID);
