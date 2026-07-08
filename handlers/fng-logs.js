@@ -62,7 +62,7 @@ async function handleFngLogs(interaction) {
 
     // Jika user melampirkan berkas gambar (Ctrl+V), masukkan ke paket kiriman
     if (attachment) {
-        payload.files = [attachment.url];
+        payload.files = [attachment]; 
     }
 
     try {
