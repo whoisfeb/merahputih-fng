@@ -9,12 +9,14 @@ const LOG_CHANNEL_ID = '1499605521416847512';
  * @param {import('discord.js').CommandInteraction} interaction 
  */
 async function handleSetMember(interaction) {
-    // 1. Cek Akses Role Pengguna Command
-    const hasAccess = interaction.member.roles.cache.some(role =>
+    // 1. Cek Akses: Owner Server ATAU Pengguna dengan Role Terdaftar
+    const isOwner = interaction.guild.ownerId === interaction.user.id;
+    const hasRoleAccess = interaction.member.roles.cache.some(role =>
         ALLOWED_ROLE_IDS.includes(role.id)
     );
 
-    if (!hasAccess) {
+    // Jika BUKAN owner DAN TIDAK MEMILIKI role akses, maka batalkan
+    if (!isOwner && !hasRoleAccess) {
         return interaction.editReply({ 
             content: '❌ Kamu tidak memiliki akses menggunakan command ini.'
         });
