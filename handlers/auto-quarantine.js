@@ -5,10 +5,13 @@ const { EmbedBuilder, PermissionFlagsBits } = require('discord.js');
 // ============================================
 const KARANTINA_CONFIG = {
   KARANTINA_CHANNEL_ID: '1516163567739600927',
-  TEAM_ROLE_ID: 
+
+  // gunakan array kalau ada beberapa role staff/admin yang harus disimpan
+  TEAM_ROLE_IDS: [
     '1499605520661876856',
     '1499605520603025518',
-    '1499605520603025517',// role staff/admin mapping (gunakan ini untuk mengecualikan saat penghapusan)
+    '1499605520603025517'
+  ],
 
   // Tambahan untuk FnG flow
   FNG_MEMBER_ROLE_ID: '1503361899629379654',
