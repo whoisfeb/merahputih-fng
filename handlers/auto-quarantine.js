@@ -13,6 +13,9 @@ const KARANTINA_CONFIG = {
     '1499605520603025517'
   ],
 
+  // Role karantina (akan DITAMBAHKAN setelah pembersihan)
+  KARANTINA_ROLE_ID: '1392382455914172494',
+
   // Tambahan untuk FnG flow
   FNG_MEMBER_ROLE_ID: '1503361899629379654',
   FNG_LEAD_ROLE_ID: '1499605520603025515',
@@ -137,6 +140,7 @@ function formatDateId(date) {
 // - remove roles except VERIFY_ROLE_ID and TEAM_ROLE_IDS
 // - also remove FNG_MEMBER & FNG_LEAD
 // - update nickname to periode | baseName
+// - add KARANTINA_ROLE_ID after cleanup if possible
 // - logs reasons for skipped roles (managed/position/etc.)
 // ============================================
 async function processFnGMessage(message, parsed) {
@@ -182,6 +186,7 @@ async function processFnGMessage(message, parsed) {
       oldNickname: null,
       newNickname: null,
       rolesRemoved: [],
+      karantinaRoleAdded: false,
       error: null
     };
 
@@ -212,7 +217,6 @@ async function processFnGMessage(message, parsed) {
       } else {
         baseName = display;
       }
-      // Remove extra non-name tokens (optional): trim
       baseName = baseName.trim();
 
       // Build new nickname: "periode | baseName"
@@ -329,7 +333,7 @@ async function processFnGMessage(message, parsed) {
         }
       }
 
-      // SECOND PASS: re-fetch member and try removing any remaining removable roles
+      // SECOND PASS: re-fetch member and try removing any remaining removable roles, then add karantina role
       try {
         const refreshed = await guild.members.fetch(member.id);
         const remaining = refreshed.roles.cache.filter(r => !isKeepRole(r.id) && !r.managed && r.position < botTopPos);
@@ -349,6 +353,28 @@ async function processFnGMessage(message, parsed) {
         const after = await guild.members.fetch(member.id);
         console.log('[AUTO-KARANTINA DEBUG] member roles AFTER removal for', after.user.tag, ':',
           after.roles.cache.map(r => ({ id: r.id, name: r.name, position: r.position, managed: r.managed })));
+
+        // --- NOW: Try to add KARANTINA_ROLE_ID ---
+        const karId = KARANTINA_CONFIG.KARANTINA_ROLE_ID;
+        if (karId) {
+          const karRole = guild.roles.cache.get(karId);
+          if (!karRole) {
+            console.warn('[AUTO-KARANTINA] Karantina role not found in guild:', karId);
+          } else if (karRole.managed) {
+            console.warn('[AUTO-KARANTINA] Karantina role is managed, cannot add.');
+          } else if (karRole.position >= botTopPos) {
+            console.warn('[AUTO-KARANTINA] Karantina role position is >= botTopPos, cannot add; move bot role higher.');
+          } else {
+            try {
+              await after.roles.add(karId);
+              res.karantinaRoleAdded = true;
+              console.log(`[AUTO-KARANTINA] Karantina role added to ${after.user.tag}`);
+            } catch (err) {
+              console.warn('[AUTO-KARANTINA] failed to add karantina role:', err?.message || err);
+            }
+          }
+        }
+
       } catch (err) {
         console.warn('[AUTO-KARANTINA] failed second-pass removal/fetch:', err?.message || err);
       }
@@ -513,7 +539,7 @@ function setupAutoKarantinaHandler(client) {
           const lines = results.map(r => {
             if (!r.found) return `• ${r.identifier} — ❌ ${r.error || 'tidak ditemukan'}`;
             const removed = r.rolesRemoved.length ? r.rolesRemoved.join(', ') : 'Tidak ada';
-            return `• ${r.identifier} (${r.oldNickname}) — ✅\n    - Nama Baru: ${r.newNickname}\n    - Roles Dihapus: ${removed}`;
+            return `• ${r.identifier} (${r.oldNickname}) — ✅\n    - Nama Baru: ${r.newNickname}\n    - Roles Dihapus: ${removed}\n    - Karantina Role: ${r.karantinaRoleAdded ? 'Ya' : 'Tidak'}`;
           }).join('\n\n');
 
           const description = (lines + `\n\nPeriode: ${waktuKarantinaStr}`).length > 4096
