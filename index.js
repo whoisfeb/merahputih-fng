@@ -10,11 +10,21 @@ const {
     OverwriteType,
     Partials // 1. TAMBAHKAN Partials di sini
 } = require('discord.js');
+const axios = require('axios'); // ➕ TAMBAHAN: Untuk menembak API GitHub Actions
 
 // Konfigurasi Token & ID (Sesuaikan dengan setup Anda)
 const CONFIG = {
     TOKEN: process.env.DISCORD_TOKEN,
     CLIENT_ID: process.env.CLIENT_ID // Pastikan ini ada di .env Anda
+};
+
+// ⚙️ PENGATURAN GITHUB ACTIONS (GANTI ISI TOKEN & CHANNEL ID DI SINI)
+const GITHUB_SETTING = {
+    TOKEN: process.env.PERSONAL_ACCESS_TOKEN, // Ganti dengan ghp_... Anda
+    OWNER: "whoisfeb",
+    REPO: "merahputih-fng",
+    WORKFLOW: "fng-merahputih.yml", 
+    CHANNEL_STATUS_ID: "1523644110404194417" // Ganti dengan ID channel Discord Anda
 };
 
 const client = new Client({
@@ -42,9 +52,6 @@ function sendLog(guild, embed) {
     }
 }
 
-// --- REGISTER SLASH COMMANDS ---
-// --- REGISTER SLASH COMMANDS ---
-// --- REGISTER SLASH COMMANDS ---
 // --- REGISTER SLASH COMMANDS ---
 const commands = [
 
@@ -286,14 +293,10 @@ const commands = [
 
 ];
 
-
-
-
 // Deploy slash commands ke Discord API
 const rest = new REST({ version: '10' }).setToken(CONFIG.TOKEN);
 (async () => {
     try {
-        // PENTING: Pastikan CONFIG.CLIENT_ID tidak typo dan nilainya ada di config Anda!
         if (!CONFIG.CLIENT_ID) {
             console.error("❌ ERROR: CONFIG.CLIENT_ID tidak ditemukan / undefined!");
             return;
@@ -326,13 +329,8 @@ const { handleDisbanned } = require('./handlers/disbanned');
 const { setupAutoKarantinaHandler } = require('./handlers/auto-quarantine');
 
 
-
 // Event: Interaction (Slash Commands, Buttons, Menus, Modals)
 client.on('interactionCreate', async (interaction) => {
-    
-    // ❌ FUNGSI TOMBOL/MODAL LAMA DI SINI SUDAH DIHAPUS 
-    // karena alur fng-logs sudah berubah total menjadi Slash Command (/)
-
     if (!interaction.isChatInputCommand()) return;
 
     try {
@@ -349,12 +347,10 @@ client.on('interactionCreate', async (interaction) => {
             return await handleSetMember(interaction);
         }
 
-        // 📷 JALANKAN SLASH COMMAND FNG-LOGS DI SINI
         if (interaction.commandName === 'fng-logs') {
             return await handleFngLogs(interaction);
         }
 
-        // 🚫 JALANKAN SLASH COMMAND DISBANNED DI SINI
         if (interaction.commandName === 'disbanned') {
             return await handleDisbanned(interaction);
         }
@@ -374,10 +370,30 @@ client.on('interactionCreate', async (interaction) => {
 });
 
 
-
 // Event Ready
-client.once('ready', (readyClient) => {
+client.once('ready', async (readyClient) => {
     console.log(`🤖 Bot siap! Login sebagai ${readyClient.user.tag}`);
+
+    // 🟢 TAMBAHAN: Mengatur Status Hijau Online di Profil Bot
+    readyClient.user.setPresence({
+        activities: [{ name: 'FnG Merah Putih | Online 🟢', type: 0 }],
+        status: 'online',
+    });
+
+    // 🟢 TAMBAHAN: Mengirim Embed Laporan Status ke Channel Discord Anda saat Aktif
+    try {
+        const channel = await readyClient.channels.fetch(GITHUB_SETTING.CHANNEL_STATUS_ID);
+        if (channel) {
+            const embed = new EmbedBuilder()
+                .setTitle("📢 Laporan Status Bot")
+                .setDescription("🟢 **ONLINE**\n\nBot berhasil dinyalakan dan siap digunakan kembali!")
+                .setColor("#00FF00") 
+                .setTimestamp();
+            await channel.send({ embeds: [embed] });
+        }
+    } catch (err) {
+        console.log("Gagal mengirim pesan status ke channel: " + err.message);
+    }
 
     handleReminder(readyClient);
     handleVerify(readyClient); 
@@ -392,12 +408,40 @@ client.on('messageCreate', async (message) => {
         await handleWarning(message);
         await handleVerifyCommand(message); 
         
-        // ❌ handleFngLogsSetup(message) DI SINI SUDAH DIHAPUS
-        // karena sistem chat manual !setup-fng-logs sudah tidak digunakan lagi
+        // 🟡 TAMBAHAN: Menangani Perintah !restart dari Discord
+        if (message.content === '!restart') {
+            if (message.author.bot) return; // Abaikan bot lain
+
+            const embedRestart = new EmbedBuilder()
+                .setTitle("📢 Laporan Status Bot")
+                .setDescription("🟡 **RESTARTING...**\n\nSedang mengirim sinyal pemicu ke GitHub Actions. Mohon tunggu beberapa saat...")
+                .setColor("#FFFF00") 
+                .setTimestamp();
+            
+            await message.channel.send({ embeds: [embedRestart] });
+
+            try {
+                // Mengirim perintah HTTP Post (workflow_dispatch) ke repositori GitHub Anda
+                await axios.post(
+                    `https://github.com{GITHUB_SETTING.OWNER}/${GITHUB_SETTING.REPO}/actions/workflows/${GITHUB_SETTING.WORKFLOW}/dispatches`,
+                    { ref: 'main' },
+                    {
+                        headers: {
+                            'Accept': 'application/vnd.github+json',
+                            'Authorization': `Bearer ${GITHUB_SETTING.TOKEN}`,
+                            'X-GitHub-Api-Version': '2022-11-28'
+                        }
+                    }
+                );
+                await message.channel.send("✅ Sinyal terkirim! GitHub Actions sedang memproses dan menyiapkan peluncuran bot baru.");
+            } catch (error) {
+                console.error(error);
+                await message.channel.send("❌ Gagal menyalakan GitHub Actions. Periksa kembali token atau nama repositori Anda.");
+            }
+        }
     } catch (error) {
         console.error('❌ Error pada Event messageCreate:', error);
     }
 });
 
 client.login(CONFIG.TOKEN);
-
